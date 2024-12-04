@@ -10,13 +10,23 @@ import { developmentConfig, productionConfig } from './config';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: path.resolve(__dirname, '.env'),
+      envFilePath: path.resolve(__dirname, '../.env'),
       load:
         process.env.NODE_ENV === 'production'
           ? [productionConfig]
           : [developmentConfig],
     }),
-    MongooseModule.forRoot(process.env.DEV_MONGODB_CONNECTION_URL),
+    MongooseModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: async (configService: ConfigService) => ({
+        uri: configService.get<string>(
+          process.env.NODE_ENV === 'production'
+            ? 'production.mongodbConnectionUrl'
+            : 'development.mongodbConnectionUrl',
+        ),
+      }),
+      inject: [ConfigService],
+    }),
   ],
   controllers: [AppController],
   providers: [AppService],
