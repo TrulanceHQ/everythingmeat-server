@@ -10,7 +10,7 @@ import { AuthModule } from './auth/auth.module';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: path.resolve(__dirname, '../.env'),
+      envFilePath: path.resolve(__dirname, './../../.env'),
       load:
         process.env.NODE_ENV === 'development'
           ? [developmentConfig]
@@ -26,6 +26,12 @@ import { AuthModule } from './auth/auth.module';
         );
         console.log(`NODE_ENV: ${process.env.NODE_ENV}`);
         console.log(`Connecting to MongoDB with URI: ${uri}`);
+        console.log('NODE_ENV:', process.env.NODE_ENV);
+        console.log(
+          'DEV_MONGODB_CONNECTION_URL:',
+          process.env.DEV_MONGODB_CONNECTION_URL,
+        );
+        console.log('Resolved envFilePath:', path.resolve(__dirname, '.env'));
         if (!uri) {
           throw new Error('MongoDB connection URI is undefined');
         }
