@@ -39,7 +39,7 @@ export class LoginUserDto {
   readonly emailAddress: string;
 
   @IsString()
-  @MinLength(6)
+  @IsNotEmpty()
   @Matches(/^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{6,}$/, {
     message:
       'Password must contain at least one letter, one number, and one special character',

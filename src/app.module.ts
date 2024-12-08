@@ -24,14 +24,6 @@ import { AuthModule } from './auth/auth.module';
             ? 'production.mongodbConnectionUrl'
             : 'development.mongodbConnectionUrl',
         );
-        console.log(`NODE_ENV: ${process.env.NODE_ENV}`);
-        console.log(`Connecting to MongoDB with URI: ${uri}`);
-        console.log('NODE_ENV:', process.env.NODE_ENV);
-        console.log(
-          'DEV_MONGODB_CONNECTION_URL:',
-          process.env.DEV_MONGODB_CONNECTION_URL,
-        );
-        console.log('Resolved envFilePath:', path.resolve(__dirname, '.env'));
         if (!uri) {
           throw new Error('MongoDB connection URI is undefined');
         }
