@@ -6,6 +6,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { developmentConfig, productionConfig } from './config';
 import { AuthModule } from './auth/auth.module';
+import { BuyersModule } from './users/buyers/buyers.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -32,6 +33,7 @@ import { AuthModule } from './auth/auth.module';
       inject: [ConfigService],
     }),
     AuthModule,
+    BuyersModule,
   ],
   controllers: [AppController],
   providers: [AppService],
