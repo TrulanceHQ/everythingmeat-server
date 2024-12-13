@@ -1,21 +1,36 @@
-import { Injectable } from '@nestjs/common';
-import { CreateBuyerDto } from './dto/create-buyer.dto';
+import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { UpdateBuyerDto } from './dto/update-buyer.dto';
-import { Order } from './entities/order.entity';
+import { Order } from './order.schema';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
+import { CreateOrderDto } from './dto/create-order.dto';
 
 @Injectable()
 export class BuyersService {
   constructor(
-    @InjectModel(Order.name) private userModel: Model<Order>,
+    @InjectModel(Order.name) private orderModel: Model<Order>,
   ) {}
-  create(createBuyerDto: CreateBuyerDto) {
-    return 'This action adds a new buyer';
+ async createOrder(createOrderDto: CreateOrderDto):Promise<any> {
+try {
+  const buyerOrder = new  this.orderModel(createOrderDto)
+const order = await buyerOrder.save()
+return order;
+} catch (error) {
+  throw new  InternalServerErrorException(error.message)
+  
+}
+    
   }
 
-  findAll() {
-    return `This action returns all buyers`;
+ async  findAll() {
+try {
+  return await    this.orderModel.find(); 
+} catch (error) {
+
+  throw new  InternalServerErrorException(error.message) 
+}
+
+
   }
 
   findOne(id: number) {
@@ -29,4 +44,5 @@ export class BuyersService {
   remove(id: number) {
     return `This action removes a #${id} buyer`;
   }
+
 }

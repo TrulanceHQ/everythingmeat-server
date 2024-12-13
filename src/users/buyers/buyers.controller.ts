@@ -1,21 +1,23 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
 import { BuyersService } from './buyers.service';
-import { CreateBuyerDto } from './dto/create-buyer.dto';
 import { UpdateBuyerDto } from './dto/update-buyer.dto';
+import { CreateOrderDto } from './dto/create-order.dto';
 
 @Controller('buyers')
 export class BuyersController {
   constructor(private readonly buyersService: BuyersService) {}
 
   @Post()
-  create(@Body() createBuyerDto: CreateBuyerDto) {
-    return this.buyersService.create(createBuyerDto);
+  create(@Body() orderDto: CreateOrderDto) {
+    return this.buyersService.createOrder(orderDto)
+        
   }
 
   @Get()
   findAll() {
     return this.buyersService.findAll();
   }
+
 
   @Get(':id')
   findOne(@Param('id') id: string) {
