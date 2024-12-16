@@ -24,6 +24,7 @@ async function bootstrap() {
     .setTitle('Everything Meat')
     .setDescription('Everything Meat API description')
     .setVersion('1.0')
+    .addBearerAuth()
     .addTag('users')
     .build();
   const documentFactory = () => SwaggerModule.createDocument(app, config);
