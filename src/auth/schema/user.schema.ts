@@ -8,6 +8,11 @@ export enum UserRole {
   SELLER = 'seller',
 }
 
+export enum Gender {
+  MALE = 'male',
+  FEMALE = 'female',
+}
+
 @Schema()
 export class User extends Document {
   @Prop({ required: true })
@@ -24,6 +29,12 @@ export class User extends Document {
 
   @Prop({ required: true, enum: UserRole })
   role: UserRole;
+
+  @Prop({ required: false })
+  image?: string;
+
+  @Prop({ required: false, enum: Gender })
+  gender: Gender;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
