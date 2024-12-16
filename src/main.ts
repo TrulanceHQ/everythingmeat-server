@@ -18,7 +18,7 @@ async function bootstrap() {
   app.useGlobalFilters(new MongoExceptionFilter());
   const configService = app.get(ConfigService);
 
-  const port = configService.get<number>('PORT') || 3000;
+  const port = configService.get<number>('PORT') || 30000;
 
   const config = new DocumentBuilder()
     .setTitle('Everything Meat')
