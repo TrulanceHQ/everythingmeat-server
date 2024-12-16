@@ -5,10 +5,10 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { Order, OrderSchema } from './entities/order.entity';
 
 @Module({
-  imports: [  MongooseModule.forFeature([{ name: Order.name, schema: OrderSchema }])],
-  controllers: [BuyersController],
-  providers: [BuyersService,
-
+  imports: [
+    MongooseModule.forFeature([{ name: Order.name, schema: OrderSchema }]),
   ],
+  controllers: [BuyersController],
+  providers: [BuyersService],
 })
 export class BuyersModule {}

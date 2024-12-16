@@ -7,9 +7,7 @@ import { Model } from 'mongoose';
 
 @Injectable()
 export class BuyersService {
-  constructor(
-    @InjectModel(Order.name) private userModel: Model<Order>,
-  ) {}
+  constructor(@InjectModel(Order.name) private userModel: Model<Order>) {}
   create(createBuyerDto: CreateBuyerDto) {
     return 'This action adds a new buyer';
   }
