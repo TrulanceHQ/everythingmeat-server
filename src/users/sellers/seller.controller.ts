@@ -6,6 +6,8 @@ import {
   UploadedFile,
   UseInterceptors,
   UseGuards,
+  Get,
+  Delete,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -60,7 +62,48 @@ export class SellerController {
     @Body() sellerDto: SellerDto,
     @UploadedFile() file?: Express.Multer.File,
   ) {
-    console.log('Uploaded File:', file);
+    // console.log('Uploaded File:', file);
     return this.sellerService.updateSeller(id, sellerDto, file);
+  }
+
+  @Get(':id')
+  @ApiOperation({ summary: 'Get seller by ID' })
+  @ApiParam({
+    name: 'id',
+    description: 'Seller ID',
+    required: true,
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Seller successfully retrieved',
+    type: SellerDto,
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Seller not found',
+  })
+  async getSeller(@Param('id') id: string) {
+    return this.sellerService.getSeller(id);
+  }
+
+  @Roles('admin')
+  @Delete('delete/:id')
+  @ApiOperation({ summary: 'Delete seller by ID' })
+  @ApiParam({
+    name: 'id',
+    description: 'Seller ID',
+    required: true,
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Seller successfully deleted',
+    type: SellerDto,
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Seller not found',
+  })
+  async deleteSeller(@Param('id') id: string) {
+    return this.sellerService.deleteSeller(id);
   }
 }

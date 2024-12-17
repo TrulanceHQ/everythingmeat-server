@@ -37,4 +37,24 @@ export class SellerService {
 
     return updatedSeller;
   }
+
+  async getSeller(id: string): Promise<User> {
+    const seller = await this.userModel.findById(id);
+
+    if (!seller) {
+      throw new NotFoundException('Seller not found');
+    }
+
+    return seller;
+  }
+
+  async deleteSeller(id: string): Promise<User> {
+    const seller = await this.userModel.findByIdAndDelete(id);
+
+    if (!seller) {
+      throw new NotFoundException('Seller not found');
+    }
+
+    return seller;
+  }
 }
