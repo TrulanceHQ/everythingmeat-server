@@ -31,7 +31,6 @@ export class AdminController {
   async getAllBuyers() {
     return this.adminService.getAllBuyers();
   }
-
   @Roles('admin')
   @Get('admin')
   @ApiOperation({ summary: 'Get all admins' })
