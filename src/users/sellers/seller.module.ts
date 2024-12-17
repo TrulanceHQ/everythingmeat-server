@@ -1,4 +1,3 @@
-// src/seller/seller.module.ts
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { SellerController } from './seller.controller';
@@ -11,13 +10,13 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 @Module({
   imports: [
     JwtModule.registerAsync({
-        imports: [ConfigModule],
-        useFactory: async (configService: ConfigService) => ({
-          secret: configService.get<string>('JWT_SECRET', 'default_secret'),
-          signOptions: { expiresIn: '1h' },
-        }),
-        inject: [ConfigService],
+      imports: [ConfigModule],
+      useFactory: async (configService: ConfigService) => ({
+        secret: configService.get<string>('JWT_SECRET', 'default_secret'),
+        signOptions: { expiresIn: '1h' },
       }),
+      inject: [ConfigService],
+    }),
     MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
     CloudinaryModule,
   ],

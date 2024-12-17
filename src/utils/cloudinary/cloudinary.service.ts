@@ -1,5 +1,5 @@
 import { Injectable, Inject } from '@nestjs/common';
-import { v2 as Cloudinary, UploadApiResponse } from 'cloudinary';
+import { UploadApiResponse } from 'cloudinary';
 
 @Injectable()
 export class CloudinaryService {
@@ -10,11 +10,20 @@ export class CloudinaryService {
     folder: string,
   ): Promise<string> {
     try {
-      const result: UploadApiResponse = await this.cloudinary.uploader.upload(
-        file.path,
-        { folder },
-      );
-      return result.secure_url;
+      return new Promise((resolve, reject) => {
+        const stream = this.cloudinary.uploader.upload_stream(
+          { folder },
+          (error: any, result: UploadApiResponse) => {
+            if (error) {
+              reject(new Error('Image upload failed'));
+            } else {
+              resolve(result.secure_url); // Returns the secure URL of the uploaded image
+            }
+          },
+        );
+
+        stream.end(file.buffer); // To Upload the file buffer
+      });
     } catch (error) {
       throw new Error('Image upload failed');
     }

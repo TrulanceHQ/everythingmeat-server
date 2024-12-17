@@ -34,7 +34,13 @@ export class User extends Document {
   image?: string;
 
   @Prop({ required: false, enum: Gender })
-  gender: Gender;
+  gender?: Gender;
+
+  @Prop({ required: false })
+  phoneNumber1?: string;
+
+  @Prop({ required: false })
+  phoneNumber2?: string;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
