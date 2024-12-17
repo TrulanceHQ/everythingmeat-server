@@ -1,22 +1,41 @@
-import * as path from 'path';
 import { Module } from '@nestjs/common';
-import { MongooseModule } from '@nestjs/mongoose';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { MongooseModule } from '@nestjs/mongoose';
+import * as path from 'path';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { developmentConfig, productionConfig } from './config';
-
+import { AuthModule } from './auth/auth.module';
+import { BuyersModule } from './users/buyers/buyers.module';
+import { SellerModule } from './users/sellers/seller.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: path.resolve(__dirname, '.env'),
+      envFilePath: path.resolve(__dirname, './../../.env'),
       load:
-        process.env.NODE_ENV === 'production'
-          ? [productionConfig]
-          : [developmentConfig],
+        process.env.NODE_ENV === 'development'
+          ? [developmentConfig]
+          : [productionConfig],
     }),
-    MongooseModule.forRoot(process.env.DEV_MONGODB_CONNECTION_URL),
+    MongooseModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: async (configService: ConfigService) => {
+        const uri = configService.get<string>(
+          process.env.NODE_ENV === 'production'
+            ? 'production.mongodbConnectionUrl'
+            : 'development.mongodbConnectionUrl',
+        );
+        if (!uri) {
+          throw new Error('MongoDB connection URI is undefined');
+        }
+        return { uri };
+      },
+      inject: [ConfigService],
+    }),
+    AuthModule,
+    BuyersModule,
+    SellerModule,
   ],
   controllers: [AppController],
   providers: [AppService],
