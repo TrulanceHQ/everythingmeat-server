@@ -7,10 +7,19 @@ import {
   Param,
   Delete,
 } from '@nestjs/common';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiBody,
+  ApiResponse,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { BuyersService } from './buyers.service';
 import { CreateBuyerDto } from './dto/create-buyer.dto';
 import { UpdateBuyerDto } from './dto/update-buyer.dto';
 
+@ApiTags('Buyers')
+@ApiBearerAuth()
 @Controller('buyers')
 export class BuyersController {
   constructor(private readonly buyersService: BuyersService) {}

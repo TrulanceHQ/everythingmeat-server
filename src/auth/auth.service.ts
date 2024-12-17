@@ -12,6 +12,7 @@ import * as bcrypt from 'bcryptjs';
 
 export interface LoginResponse {
   accessToken: string;
+  user: User;
 }
 
 @Injectable()
@@ -48,15 +49,19 @@ export class AuthService {
       const payload = {
         emailAddress: user.emailAddress,
         sub: user._id,
-        role: user.role,
+        roles: user.role,
       };
       const accessToken = this.jwtService.sign(payload);
-      return { accessToken };
+      return { accessToken, user };
     }
     throw new UnauthorizedException('Invalid credentials');
   }
 
   async findAll(): Promise<User[]> {
     return this.userModel.find().exec();
+  }
+
+  async findUsersByRole(role: string): Promise<User[]> {
+    return this.userModel.find({ role: role }).exec();
   }
 }

@@ -24,5 +24,6 @@ import { LocalStrategy } from 'src/utils/LocalGuard/local.strategy';
   ],
   controllers: [UsersController],
   providers: [AuthService, LocalStrategy, RolesGuard],
+  exports: [AuthService],
 })
 export class AuthModule {}

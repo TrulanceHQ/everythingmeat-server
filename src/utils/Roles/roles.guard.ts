@@ -3,9 +3,10 @@ import {
   CanActivate,
   ExecutionContext,
   ForbiddenException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { JwtService } from '@nestjs/jwt';
+import { JsonWebTokenError, JwtService, TokenExpiredError } from '@nestjs/jwt';
 import { Observable } from 'rxjs';
 
 @Injectable()
@@ -18,8 +19,8 @@ export class RolesGuard implements CanActivate {
   canActivate(
     context: ExecutionContext,
   ): boolean | Promise<boolean> | Observable<boolean> {
-    const role = this.reflector.get<string[]>('role', context.getHandler());
-    if (!role) {
+    const roles = this.reflector.get<string[]>('roles', context.getHandler());
+    if (!roles) {
       return true;
     }
     const request = context.switchToHttp().getRequest();
@@ -27,10 +28,22 @@ export class RolesGuard implements CanActivate {
     if (!token) {
       throw new ForbiddenException('No token provided');
     }
-    const user = this.jwtService.verify(token);
-    if (role != user.role) {
-      throw new ForbiddenException('You do not have the required role');
+    try {
+      const user = this.jwtService.verify(token);
+      if (!user.roles || !roles.some((role) => user.roles.includes(role))) {
+        throw new ForbiddenException(
+          'Acess Denied. You do not have the permission to this destination.',
+        );
+      }
+      return true;
+    } catch (error) {
+      if (error instanceof TokenExpiredError) {
+        throw new UnauthorizedException('Token has expired');
+      } else if (error instanceof JsonWebTokenError) {
+        throw new UnauthorizedException('Invalid token');
+      } else {
+        throw new UnauthorizedException('Unauthorized');
+      }
     }
-    return true;
   }
 }

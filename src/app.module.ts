@@ -7,6 +7,7 @@ import { AppService } from './app.service';
 import { developmentConfig, productionConfig } from './config';
 import { AuthModule } from './auth/auth.module';
 import { BuyersModule } from './users/buyers/buyers.module';
+import { AdminModule } from './users/admin/admin.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -34,6 +35,7 @@ import { BuyersModule } from './users/buyers/buyers.module';
     }),
     AuthModule,
     BuyersModule,
+    AdminModule,
   ],
   controllers: [AppController],
   providers: [AppService],
