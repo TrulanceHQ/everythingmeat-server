@@ -1,21 +1,27 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import { BadRequestException, Injectable, InternalServerErrorException } from '@nestjs/common';
 import { UpdateBuyerDto } from './dto/update-buyer.dto';
 import { Order } from './order.schema';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { CreateOrderDto } from './dto/create-order.dto';
+import { User } from 'src/auth/schema/user.schema';
 
 @Injectable()
 export class BuyersService {
   constructor(
     @InjectModel(Order.name) private orderModel: Model<Order>,
+    @InjectModel(User.name) private userModel: Model<User>,
   ) {}
  async createOrder(createOrderDto: CreateOrderDto):Promise<any> {
 try {
-  const buyerOrder = new  this.orderModel(createOrderDto)
+  const user =  await  this.userModel.findOne({_id:createOrderDto.buyerId})
+  if(!user) throw new BadRequestException("user does not exit")
+
+  const buyerOrder = new  this.orderModel({buyer:user,}) 
 const order = await buyerOrder.save()
 return order;
 } catch (error) {
+  if(error.status < 500) throw new BadRequestException(error.message) 
   throw new  InternalServerErrorException(error.message)
   
 }

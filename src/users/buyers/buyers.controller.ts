@@ -1,16 +1,16 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, ValidationPipe } from '@nestjs/common';
 import { BuyersService } from './buyers.service';
 import { UpdateBuyerDto } from './dto/update-buyer.dto';
 import { CreateOrderDto } from './dto/create-order.dto';
 
-@Controller('buyers')
+@Controller('api/v1/buyers/order')
 export class BuyersController {
   constructor(private readonly buyersService: BuyersService) {}
-
+  
   @Post()
-  create(@Body() orderDto: CreateOrderDto) {
+  create(@Body( new ValidationPipe()) orderDto: CreateOrderDto) {
+    console.log(orderDto)
     return this.buyersService.createOrder(orderDto)
-        
   }
 
   @Get()
@@ -23,6 +23,7 @@ export class BuyersController {
   findOne(@Param('id') id: string) {
     return this.buyersService.findOne(+id);
   }
+  ///
 
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateBuyerDto: UpdateBuyerDto) {
