@@ -43,7 +43,13 @@ import {
   HttpCode,
   UseGuards,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBody, ApiResponse } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiBody,
+  ApiResponse,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { AuthService, LoginResponse } from './auth.service';
 import { CreateUserDto, LoginUserDto } from './auth.dto';
 import { LocalAuthGuard } from '../utils/LocalGuard/local-auth.guard';
@@ -51,6 +57,7 @@ import { RolesGuard } from '../utils/Roles/roles.guard';
 import { Roles } from '../utils/Roles/roles.decorator';
 
 @ApiTags('Users')
+@ApiBearerAuth()
 @Controller('api/v1')
 @UseGuards(RolesGuard)
 export class UsersController {

@@ -20,8 +20,7 @@ return order;
   
 }
     
-  }
-
+ }
  async  findAll() {
 try {
   return await    this.orderModel.find(); 
