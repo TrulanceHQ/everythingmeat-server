@@ -1,4 +1,12 @@
-import { Controller, Get, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  UseGuards,
+  Param,
+  Patch,
+  Body,
+  Delete,
+} from '@nestjs/common';
 import { AdminService } from './admin.service';
 import { RolesGuard } from './../../utils/Roles/roles.guard';
 import { Roles } from './../../utils/Roles/roles.decorator';
@@ -8,6 +16,7 @@ import {
   ApiResponse,
   ApiBearerAuth,
 } from '@nestjs/swagger';
+import { UpdateUserStatusDto } from 'src/auth/auth.dto';
 
 @ApiTags('Admin (Admin only)')
 @ApiBearerAuth()
@@ -37,5 +46,38 @@ export class AdminController {
   @ApiResponse({ status: 200, description: 'List of all admins' })
   async getAllAdmins() {
     return this.adminService.getAllAdmins();
+  }
+
+  @Roles('admin')
+  @Get('user/:id')
+  @ApiOperation({ summary: 'Get user by ID' })
+  @ApiResponse({ status: 200, description: 'User details' })
+  @ApiResponse({ status: 404, description: 'User not found' })
+  async getOneUserById(@Param('id') userId: string) {
+    return this.adminService.getOneUserById(userId);
+  }
+
+  @Roles('admin')
+  @Patch(':id/status')
+  @ApiOperation({ summary: 'Update user status' })
+  @ApiResponse({ status: 200, description: 'User status updated' })
+  @ApiResponse({ status: 404, description: 'User not found' })
+  async updateUserStatus(
+    @Param('id') userId: string,
+    @Body() updateUserStatusDto: UpdateUserStatusDto,
+  ) {
+    return this.adminService.updateUserStatus(
+      userId,
+      updateUserStatusDto.isActive,
+    );
+  }
+
+  @Roles('admin')
+  @Delete('user/:id')
+  @ApiOperation({ summary: 'Delete user' })
+  @ApiResponse({ status: 200, description: 'User deleted' })
+  @ApiResponse({ status: 404, description: 'User not found' })
+  async deleteUser(@Param('id') userId: string) {
+    return this.adminService.deleteUser(userId);
   }
 }

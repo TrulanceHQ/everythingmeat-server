@@ -16,4 +16,15 @@ export class AdminService {
   async getAllAdmins() {
     return this.authService.findUsersByRole('admin');
   }
+
+  async getOneUserById(id: string) {
+    return this.authService.findUserById(id);
+  }
+  async updateUserStatus(id: string, isActive: boolean) {
+    return this.authService.updateUserStatus(id, isActive);
+  }
+
+  async deleteUser(id: string) {
+    return this.authService.deleteUser(id);
+  }
 }
