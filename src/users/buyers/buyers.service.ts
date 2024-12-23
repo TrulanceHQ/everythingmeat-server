@@ -7,7 +7,6 @@ import { CreateOrderDto } from './dto/create-order.dto';
 import { User } from 'src/auth/schema/user.schema';
 import { CreateCatDto } from './dto/create-cat.dto';
 import { Cart } from './cart.schema';
-import { use } from 'passport';
 import { Product } from 'src/products/product.schema';
 
 @Injectable()
