@@ -1,14 +1,18 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { ArrayMinSize, IsArray, IsNotEmpty } from 'class-validator';
 import mongoose from "mongoose";
-import { AnyCatcher } from "rxjs/internal/AnyCatcher";
-export class CreateOrderDto {
+interface CartItem {
+  productId:string,
+  qty:number
+}
+export class CreateCatDto {
     @IsNotEmpty()
       @ApiProperty({ description: 'buyerId', example: 'btytniykmw477m' })
     buyerId:mongoose.Schema.Types.ObjectId;
         @IsNotEmpty()
-        @IsArray()
-        @ArrayMinSize(1)
-    @ApiProperty({ description: 'productIds', example: ["btytniykmw477m"] })
-    productId:string[]
+    @ApiProperty({description: 'productId', example: "btytniykmw477m"})
+    prodId: string
+    @ApiProperty({description: 'Quantity of product needed', example: 20})
+    qty: number
+
 }

@@ -7,6 +7,9 @@ import { AppService } from './app.service';
 import { developmentConfig, productionConfig } from './config';
 import { AuthModule } from './auth/auth.module';
 import { BuyersModule } from './users/buyers/buyers.module';
+import *  as dotenv from "dotenv"
+dotenv.config()
+console.log(process.env.DEV_MONGODB_CONNECTION_URL)
 @Module({
   imports: [
     ConfigModule.forRoot({
