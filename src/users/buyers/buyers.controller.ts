@@ -1,10 +1,9 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete, ValidationPipe, Query } from '@nestjs/common';
 import { BuyersService } from './buyers.service';
 import { UpdateBuyerDto } from './dto/update-buyer.dto';
-import { CreateOrderDto } from './dto/create-order.dto';
 import { CreateCatDto } from './dto/create-cat.dto';
 
-@Controller('api/v1/buyers/order')
+@Controller('buyers')
 export class BuyersController {
   constructor(private readonly buyersService: BuyersService) {}
   
@@ -21,10 +20,6 @@ export class BuyersController {
   removeCartItem(@Param('id') id:string ) {
     return this.buyersService.removeItem(id)
   }
-
-
-
-
 
   @Get()
   findAll() {
