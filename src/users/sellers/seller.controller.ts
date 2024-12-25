@@ -62,7 +62,9 @@ export class SellerController {
     @Body() sellerDto: SellerDto,
     @UploadedFile() file?: Express.Multer.File,
   ) {
-    // console.log('Uploaded File:', file);
+    console.log('Uploaded id:', id);
+    console.log('Uploaded sellerDto:', sellerDto);
+    console.log('Uploaded file:', file);
     return this.sellerService.updateSeller(id, sellerDto, file);
   }
 

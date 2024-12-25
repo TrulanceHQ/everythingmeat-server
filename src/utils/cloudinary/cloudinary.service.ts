@@ -5,27 +5,43 @@ import { UploadApiResponse } from 'cloudinary';
 export class CloudinaryService {
   constructor(@Inject('CLOUDINARY') private cloudinary) {}
 
+  // Upload a single image
   async uploadImage(
     file: Express.Multer.File,
     folder: string,
   ): Promise<string> {
-    try {
-      return new Promise((resolve, reject) => {
-        const stream = this.cloudinary.uploader.upload_stream(
-          { folder },
-          (error: any, result: UploadApiResponse) => {
-            if (error) {
-              reject(new Error('Image upload failed'));
-            } else {
-              resolve(result.secure_url); // Returns the secure URL of the uploaded image
-            }
-          },
-        );
-
-        stream.end(file.buffer); // To Upload the file buffer
-      });
-    } catch (error) {
-      throw new Error('Image upload failed');
+    if (!file || !file.buffer) {
+      throw new Error('Invalid file or file buffer not found');
     }
+
+    return new Promise((resolve, reject) => {
+      const stream = this.cloudinary.uploader.upload_stream(
+        { folder },
+        (error: any, result: UploadApiResponse) => {
+          if (error) {
+            reject(new Error('Image upload failed'));
+          } else {
+            resolve(result.secure_url); // Return the secure URL of the uploaded image
+          }
+        },
+      );
+
+      stream.end(file.buffer); // Pass the file buffer to Cloudinary
+    });
+  }
+
+  // Upload multiple images
+  async uploadImages(
+    files: Express.Multer.File[],
+    folder: string,
+  ): Promise<string[]> {
+    if (!files || files.length === 0) {
+      throw new Error('No files provided for upload');
+    }
+
+    // Map through files and upload them one by one
+    const uploadPromises = files.map((file) => this.uploadImage(file, folder));
+
+    return Promise.all(uploadPromises); // Resolve all upload promises
   }
 }

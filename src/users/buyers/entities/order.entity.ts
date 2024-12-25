@@ -1,7 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose, { Document } from 'mongoose';
 import { User } from 'src/auth/schema/user.schema';
-import { Product } from 'src/products/product.schema';
+import { Product } from '../../../products/schema/product.schema';
 @Schema({ timestamps: true })
 export class Order extends Document {
   @Prop([
