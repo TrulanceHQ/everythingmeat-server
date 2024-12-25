@@ -55,6 +55,7 @@ import {
   Matches,
   MinLength,
   IsEnum,
+  IsBoolean,
 } from 'class-validator';
 import { UserRole } from './schema/user.schema';
 
@@ -113,4 +114,13 @@ export class LoginUserDto {
   @IsString()
   @IsNotEmpty()
   readonly password: string;
+}
+
+export class UpdateUserStatusDto {
+  @ApiProperty({
+    example: true,
+    description: 'Indicates whether the user account is active',
+  })
+  @IsBoolean()
+  isActive: boolean;
 }

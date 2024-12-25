@@ -8,6 +8,7 @@ import { developmentConfig, productionConfig } from './config';
 import { AuthModule } from './auth/auth.module';
 import { BuyersModule } from './users/buyers/buyers.module';
 import { SellerModule } from './users/sellers/seller.module';
+import { AdminModule } from './users/admin/admin.module';
 import { ProductModule } from './products/product.module';
 @Module({
   imports: [
@@ -37,6 +38,7 @@ import { ProductModule } from './products/product.module';
     AuthModule,
     BuyersModule,
     SellerModule,
+    AdminModule,
     ProductModule,
   ],
   controllers: [AppController],
