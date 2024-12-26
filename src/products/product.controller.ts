@@ -21,6 +21,7 @@ import { CreateProductDto } from './product.dto';
 import { ProductService } from './product.service';
 import { RolesGuard } from '../utils/Roles/roles.guard';
 import { Roles } from '../utils/Roles/roles.decorator';
+// import { send } from 'process';
 
 @Controller('api/v1/products')
 @ApiTags('Sellers')
@@ -84,13 +85,14 @@ export class ProductController {
       (file) => file.fieldname === 'productImages',
     );
 
-    console.log('req.user', req.user);
-    const sellerId = req.user.id;
+    // console.log('req.user', req.user);
+    const sellerId = req.user.sub;
+    // console.log('sellerId', sellerId);
     return this.productService.createProduct(
+      sellerId,
       createProductDto,
       healthSatisfactionImage,
       productImages,
-      sellerId,
     );
   }
 }

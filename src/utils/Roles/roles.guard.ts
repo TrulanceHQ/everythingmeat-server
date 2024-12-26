@@ -30,6 +30,7 @@ export class RolesGuard implements CanActivate {
     }
     try {
       const user = this.jwtService.verify(token);
+      request.user = user;
       if (!user.roles || !roles.some((role) => user.roles.includes(role))) {
         throw new ForbiddenException(
           'Acess Denied. You do not have the permission to this destination.',

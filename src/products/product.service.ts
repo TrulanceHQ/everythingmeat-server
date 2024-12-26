@@ -13,10 +13,10 @@ export class ProductService {
   ) {}
 
   async createProduct(
+    sellerId: string,
     createProductDto: CreateProductDto,
     healthSatisfactionImage?: Express.Multer.File,
     productImages?: Express.Multer.File[],
-    createdBy?: string,
   ): Promise<Product> {
     // Upload health satisfaction image
     const healthSatisfactionImageUrl = healthSatisfactionImage
@@ -39,7 +39,7 @@ export class ProductService {
       ...createProductDto,
       healthSatisfactionImage: healthSatisfactionImageUrl,
       productImages: productImagesUrls,
-      createdBy,
+      sellerId,
     });
 
     return newProduct.save();

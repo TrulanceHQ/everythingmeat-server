@@ -29,7 +29,7 @@ export class Product extends Document {
   totalSlots: number;
 
   @Prop({ type: Types.ObjectId, ref: 'User', required: true }) // Reference to User (Seller)
-  createdBy: User;
+  sellerId: User;
 }
 
 export const ProductSchema = SchemaFactory.createForClass(Product);
