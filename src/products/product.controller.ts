@@ -9,6 +9,8 @@ import {
   BadRequestException,
   Patch,
   Param,
+  Get,
+  Query,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -24,6 +26,16 @@ import { CreateProductDto, UpdateProductDto } from './product.dto';
 import { ProductService } from './product.service';
 import { RolesGuard } from '../utils/Roles/roles.guard';
 import { Roles } from '../utils/Roles/roles.decorator';
+
+const allowedMimesTypes = [
+  'image/jpeg',
+  'image/png',
+  'image/jpg',
+  'image/webp',
+  'application/pdf', // PDF files
+  'application/msword', // DOC files
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // DOCX files
+];
 
 @Controller('api/v1/products')
 @ApiTags('Sellers')
@@ -54,17 +66,6 @@ export class ProductController {
         fileSize: 1024 * 1024 * 5, // 5MB file size limit
       },
       fileFilter: (req, file, cb) => {
-        // Allowed file types
-        const allowedMimesTypes = [
-          'image/jpeg',
-          'image/png',
-          'image/jpg',
-          'image/webp',
-          'application/pdf', // PDF files
-          'application/msword', // DOC files
-          'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // DOCX files
-        ];
-
         if (allowedMimesTypes.includes(file.mimetype)) {
           cb(null, true);
         } else {
@@ -127,17 +128,6 @@ export class ProductController {
         fileSize: 1024 * 1024 * 5, // 5MB file size limit
       },
       fileFilter: (req, file, cb) => {
-        // Allowed file types
-        const allowedMimesTypes = [
-          'image/jpeg',
-          'image/png',
-          'image/jpg',
-          'image/webp',
-          'application/pdf', // PDF files
-          'application/msword', // DOC files
-          'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // DOCX files
-        ];
-
         if (allowedMimesTypes.includes(file.mimetype)) {
           cb(null, true);
         } else {
@@ -173,5 +163,60 @@ export class ProductController {
       healthSatisfactionImage,
       productImages,
     );
+  }
+
+  @Get()
+  @ApiOperation({ summary: 'Get all products' })
+  @ApiResponse({
+    status: 200,
+    description: 'Successfully fetched all products',
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Invalid request',
+  })
+  async getAllProducts(@Query() query: any) {
+    return this.productService.getAllProducts(query);
+  }
+
+  @Get(':id')
+  @ApiOperation({ summary: 'Get product by ID' })
+  @ApiParam({
+    name: 'id',
+    description: 'Product ID',
+    required: true,
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Successfully fetched the product',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Product not found',
+  })
+  async getProductById(@Param('id') productId: string) {
+    return this.productService.getProductById(productId);
+  }
+
+  @Get('seller/:sellerId')
+  @ApiOperation({ summary: 'Get all products by a seller' })
+  @ApiParam({
+    name: 'sellerId',
+    description: 'The ID of the seller',
+    required: true,
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Successfully fetched all products by the seller',
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Invalid request',
+  })
+  async getAllProductsBySeller(
+    @Param('sellerId') sellerId: string,
+    @Query() query: any,
+  ) {
+    return this.productService.getAllProductsBySeller(sellerId, query);
   }
 }

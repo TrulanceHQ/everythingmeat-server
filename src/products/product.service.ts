@@ -88,4 +88,40 @@ export class ProductService {
 
     return updatedProduct;
   }
+
+  async getAllProducts(query: any): Promise<Product[]> {
+    const { page = 1, limit = 10 } = query;
+
+    const products = await this.productModel
+      .find()
+      .skip((page - 1) * limit)
+      .limit(limit)
+      .exec();
+
+    return products;
+  }
+
+  async getProductById(productId: string): Promise<Product> {
+    const product = await this.productModel.findById(productId).exec();
+    if (!product) {
+      throw new BadRequestException('Product not found');
+    }
+
+    return product;
+  }
+
+  async getAllProductsBySeller(
+    sellerId: string,
+    query: any,
+  ): Promise<Product[]> {
+    const { page = 1, limit = 20 } = query;
+
+    const products = await this.productModel
+      .find({ sellerId })
+      .skip((page - 1) * limit)
+      .limit(limit)
+      .exec();
+
+    return products;
+  }
 }
