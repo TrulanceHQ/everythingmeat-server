@@ -26,7 +26,7 @@ import { Roles } from 'src/utils/Roles/roles.decorator';
 
 @Controller('api/v1/seller')
 @ApiTags('Sellers')
-@ApiBearerAuth() // Enables Bearer Token in Swagger UIh
+@ApiBearerAuth() // Enables Bearer Token in Swagger UI
 @UseGuards(RolesGuard)
 export class SellerController {
   constructor(private readonly sellerService: SellerService) {}
