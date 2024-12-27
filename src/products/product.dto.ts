@@ -1,6 +1,7 @@
 import { IsString, IsNumber, IsDate, IsOptional } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
+import { PartialType } from '@nestjs/swagger';
 export class CreateProductDto {
   @ApiProperty({ description: 'Name of the product' })
   @IsString()
@@ -46,3 +47,5 @@ export class CreateProductDto {
   @Type(() => Number) // Transform the incoming string to a
   totalSlots: number;
 }
+
+export class UpdateProductDto extends PartialType(CreateProductDto) {}

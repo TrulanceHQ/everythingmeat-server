@@ -1,5 +1,5 @@
-import { Injectable } from '@nestjs/common';
-import { CreateProductDto } from './product.dto';
+import { BadRequestException, Injectable } from '@nestjs/common';
+import { CreateProductDto, UpdateProductDto } from './product.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Product } from './schema/product.schema';
@@ -43,5 +43,49 @@ export class ProductService {
     });
 
     return newProduct.save();
+  }
+
+  async updateProduct(
+    productId: string,
+    sellerId: string,
+    updateProductDto: UpdateProductDto,
+    healthSatisfactionImage?: Express.Multer.File,
+    productImages?: Express.Multer.File[],
+  ): Promise<Product> {
+    // Find a product
+    const product = await this.productModel.findById(productId);
+    if (!product) {
+      throw new BadRequestException('Product not found');
+    }
+
+    // Upload health satisfaction image
+    if (healthSatisfactionImage) {
+      updateProductDto.healthSatisfactionImage =
+        await this.cloudinaryService.uploadImage(
+          healthSatisfactionImage,
+          'health-safety',
+        );
+    }
+
+    // Upload product images
+    if (productImages?.length) {
+      updateProductDto.productImages =
+        await this.cloudinaryService.uploadImages(
+          productImages,
+          'product-images',
+        );
+    }
+
+    const updatedProduct = await this.productModel.findByIdAndUpdate(
+      productId,
+      {
+        ...product.toObject(),
+        ...updateProductDto,
+        sellerId,
+      },
+      { new: true },
+    );
+
+    return updatedProduct;
   }
 }

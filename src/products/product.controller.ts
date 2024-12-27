@@ -7,6 +7,8 @@ import {
   UseGuards,
   Request,
   BadRequestException,
+  Patch,
+  Param,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -15,13 +17,13 @@ import {
   ApiBearerAuth,
   ApiConsumes,
   ApiBody,
+  ApiParam,
 } from '@nestjs/swagger';
 import { AnyFilesInterceptor } from '@nestjs/platform-express';
-import { CreateProductDto } from './product.dto';
+import { CreateProductDto, UpdateProductDto } from './product.dto';
 import { ProductService } from './product.service';
 import { RolesGuard } from '../utils/Roles/roles.guard';
 import { Roles } from '../utils/Roles/roles.decorator';
-// import { send } from 'process';
 
 @Controller('api/v1/products')
 @ApiTags('Sellers')
@@ -58,7 +60,11 @@ export class ProductController {
           'image/png',
           'image/jpg',
           'image/webp',
+          'application/pdf', // PDF files
+          'application/msword', // DOC files
+          'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // DOCX files
         ];
+
         if (allowedMimesTypes.includes(file.mimetype)) {
           cb(null, true);
         } else {
@@ -85,12 +91,85 @@ export class ProductController {
       (file) => file.fieldname === 'productImages',
     );
 
-    // console.log('req.user', req.user);
     const sellerId = req.user.sub;
-    // console.log('sellerId', sellerId);
     return this.productService.createProduct(
       sellerId,
       createProductDto,
+      healthSatisfactionImage,
+      productImages,
+    );
+  }
+
+  @Roles('seller')
+  @Patch(':id')
+  @ApiOperation({ summary: 'Update a product' })
+  @ApiConsumes('multipart/form-data')
+  @ApiParam({
+    name: 'id',
+    description: 'Product ID',
+    required: true,
+  })
+  @ApiBody({
+    description: 'Product data to update',
+    type: UpdateProductDto,
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Product successfully updated',
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Invalid data or request',
+  })
+  @UseInterceptors(
+    AnyFilesInterceptor({
+      limits: {
+        fileSize: 1024 * 1024 * 5, // 5MB file size limit
+      },
+      fileFilter: (req, file, cb) => {
+        // Allowed file types
+        const allowedMimesTypes = [
+          'image/jpeg',
+          'image/png',
+          'image/jpg',
+          'image/webp',
+          'application/pdf', // PDF files
+          'application/msword', // DOC files
+          'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // DOCX files
+        ];
+
+        if (allowedMimesTypes.includes(file.mimetype)) {
+          cb(null, true);
+        } else {
+          cb(
+            new BadRequestException(
+              `Invalid file type. Only JPEG, PNG, JPG, and WEBP image files are allowed.`,
+            ),
+            false,
+          );
+        }
+      },
+    }),
+  )
+  async updateProduct(
+    @Param('id') productId: string,
+    @Body() updateProductDto: UpdateProductDto,
+    @UploadedFiles() files: Express.Multer.File[],
+    @Request() req,
+  ) {
+    // Separate files based on field name
+    const healthSatisfactionImage = files.find(
+      (file) => file.fieldname === 'healthSatisfactionImage',
+    );
+    const productImages = files.filter(
+      (file) => file.fieldname === 'productImages',
+    );
+
+    const sellerId = req.user.sub;
+    return this.productService.updateProduct(
+      productId,
+      sellerId,
+      updateProductDto,
       healthSatisfactionImage,
       productImages,
     );
