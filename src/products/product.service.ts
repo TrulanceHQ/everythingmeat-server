@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { CreateProductDto, UpdateProductDto } from './product.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
@@ -58,6 +62,12 @@ export class ProductService {
       throw new BadRequestException('Product not found');
     }
 
+    if (product.sellerId.toString() !== sellerId) {
+      throw new UnauthorizedException(
+        'You are not authorized to update this product',
+      );
+    }
+
     // Upload health satisfaction image
     if (healthSatisfactionImage) {
       updateProductDto.healthSatisfactionImage =
@@ -89,16 +99,31 @@ export class ProductService {
     return updatedProduct;
   }
 
-  async getAllProducts(query: any): Promise<Product[]> {
+  async getAllProducts(query: any): Promise<any> {
     const { page = 1, limit = 10 } = query;
+
+    const totalProducts = await this.productModel.countDocuments();
+    const totalPages = Math.ceil(totalProducts / limit);
+
+    if (page > totalPages) {
+      throw new BadRequestException(
+        `Page ${page} exceeds total pages ${totalPages}.`,
+      );
+    }
 
     const products = await this.productModel
       .find()
+      .sort({ createdAt: -1 })
       .skip((page - 1) * limit)
-      .limit(limit)
+      .limit(parseInt(limit, 10))
       .exec();
 
-    return products;
+    return {
+      totalProducts,
+      totalPages,
+      currentPage: page,
+      products,
+    };
   }
 
   async getProductById(productId: string): Promise<Product> {
@@ -113,15 +138,28 @@ export class ProductService {
   async getAllProductsBySeller(
     sellerId: string,
     query: any,
-  ): Promise<Product[]> {
+  ): Promise<any> {
     const { page = 1, limit = 20 } = query;
 
+    const totalProducts = await this.productModel.countDocuments();
+    const totalPages = Math.ceil(totalProducts / limit);
+
+    if (page > totalPages) {
+      throw new BadRequestException(
+        `Page ${page} exceeds total pages ${totalPages}.`,
+      );
+    }
     const products = await this.productModel
       .find({ sellerId })
       .skip((page - 1) * limit)
       .limit(limit)
       .exec();
 
-    return products;
+      return {
+        totalProducts,
+        totalPages,
+        currentPage: page,
+        products,
+      };
   }
 }
