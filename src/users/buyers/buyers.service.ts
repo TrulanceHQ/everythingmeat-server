@@ -49,7 +49,8 @@ try {
 
         //check available slot
           if(!this.checkSlotAvailable(prod,createCartDto.slot)) throw new BadRequestException("Slot filled up")
-      const newCart =  new this.cartModel({buyer:user,prodId:createCartDto.prodId,qty:createCartDto.slot})
+
+      const newCart =  new this.cartModel({buyer:user,prod:prod,slot:createCartDto.slot})
     
     const cart = await newCart.save()
     return cart;
@@ -67,17 +68,33 @@ try {
       return  this.cartModel.deleteOne({_id:cartId});
     }
     
+    async getAllCarts (query: any): Promise<Cart[]> {
+      const { page = 1, limit = 10 } = query;
+      const cart = await this.cartModel
+        .find()
+        .skip((page - 1) * limit)
+        .limit(limit)
+        .exec();
+      return cart;
+    }
+
+    async getBuyerCarts (userId:string): Promise<Cart[]> {
+      const user = await this.userModel.findOne({_id:userId})
+      const carts = await this.cartModel.find({buyer:user,status:true}).populate('prod')
+      return carts;
+    }
+
     async UpdateCartQty(cartId:string,qty:number) {
         const cart =  await  this.cartModel.findOne({_id:cartId})
         if(!cart) throw new BadRequestException("Cart does not exist")
       return  this.cartModel.updateOne({_id:cartId,slot:qty});
     }
   
-    async createOrder(createOrderDto: CreateOrderDto):Promise<any> {
+    async createOrder(buyerId:string):Promise<any> {
       try {
         const soldOut:any[] = []
         let totalAmount:number = 0
-        const usersCart = await this.cartModel.find({status:true}).populate("Product")
+        const usersCart = await this.cartModel.find({status:true,_id:buyerId}).populate("Product")
             usersCart.forEach((cart)=>{
               if(cart.slot > cart.prod.totalSlots) soldOut.push(cart.prod)
              else{
@@ -102,12 +119,13 @@ checkSlotAvailable(  prod:Product,
  return prod.totalSlots > slot ?true:false
 }
 
-async updateProductAfterPaymnent(){
-  const usersCart = await this.cartModel.find({status:true}).populate("Product")
+async updateProductAfterPaymnent(id:string){
+  const usersCart = await this.cartModel.find({status:true,_id:id}).populate("Product")
   for (let index = 0; index < usersCart.length; index++) {
         await this.prodModel.updateOne({_id:usersCart[index].prod._id,totalSlots:usersCart[index].prod.totalSlots-usersCart[index].slot})
       await  usersCart[index].updateOne({_id:usersCart[index]._id,status:false})
   }
+
 }
 
 

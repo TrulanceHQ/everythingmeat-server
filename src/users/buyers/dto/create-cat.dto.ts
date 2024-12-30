@@ -8,10 +8,11 @@ interface CartItem {
 export class CreateCatDto {
     @IsNotEmpty()
       @ApiProperty({ description: 'buyerId', example: 'btytniykmw477m' })
-    buyerId:mongoose.Schema.Types.ObjectId;
+    buyerId:string;
         @IsNotEmpty()
     @ApiProperty({description: 'productId', example: "btytniykmw477m"})
-    prodId: string
+    prodId: string;
+    @IsNotEmpty()
     @ApiProperty({description: 'Quantity of product needed', example: 20})
     slot: number
 

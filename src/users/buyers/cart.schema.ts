@@ -6,29 +6,27 @@ import { Product } from 'src/products/schema/product.schema';
 @Schema ({timestamps:true})
 export class Cart extends Document {
 
-    @Prop([{
+    @Prop({
             type:mongoose.Schema.Types.ObjectId,
             ref:'Product',
             required:true
-        }
-    ])
-
+        })
    prod:Product;
-   @Prop([{
+   @Prop({
         type:number,
         required:true
-   }])
+   })
    slot:number;
-   @Prop([{
+   @Prop({
     type:mongoose.Schema.Types.ObjectId,
     ref:'User',
     required:true
-}])
+})
    buyer:mongoose.Schema.Types.ObjectId;
 
    @Prop(
     {
-        default:false,
+        default:true,
     } 
    )
    status:boolean;
