@@ -7,7 +7,7 @@ import { CreateOrderDto } from './dto/create-order.dto';
 import { User } from 'src/auth/schema/user.schema';
 import { CreateCatDto } from './dto/create-cat.dto';
 import { Cart } from './cart.schema';
-import { Product } from 'src/products/product.schema';
+import { Product } from 'src/products/schema/product.schema';
 
 @Injectable()
 export class BuyersService {
@@ -44,13 +44,12 @@ try {
     try {
       const user =  await  this.userModel.findOne({_id:createCartDto.buyerId})
       if(!user) throw new BadRequestException("user does not exit")
-        /**
-         * this is to be uncommented when the product schema has been created
-         */
-      //   const prod =  await  this.prodModel.findOne({_id:createCartDto.prodId})
-      // if(!prod) throw new BadRequestException("Product does not exit")
-    
-      const newCart =  new this.cartModel({buyer:user,prodId:createCartDto.prodId,qty:createCartDto.qty})
+  const prod =  await  this.prodModel.findOne({_id:createCartDto.prodId})
+      if(!prod) throw new BadRequestException("Product does not exit")
+
+        //check available slot
+          if(!this.checkSlotAvailable(prod,createCartDto.slot)) throw new BadRequestException("Slot filled up")
+      const newCart =  new this.cartModel({buyer:user,prodId:createCartDto.prodId,qty:createCartDto.slot})
     
     const cart = await newCart.save()
     return cart;
@@ -63,19 +62,15 @@ try {
      }
 
     async removeItem(cartId:string) {
-      // const user =  await  this.userModel.findOne({_id:userId})
-      // if(!user) throw new BadRequestException("user does not exit")
         const cart =  await  this.cartModel.findOne({_id:cartId})
         if(!cart) throw new BadRequestException("Cart does not exist")
       return  this.cartModel.deleteOne({_id:cartId});
     }
     
     async UpdateCartQty(cartId:string,qty:number) {
-      // const user =  await  this.userModel.findOne({_id:userId})
-      // if(!user) throw new BadRequestException("user does not exit")
         const cart =  await  this.cartModel.findOne({_id:cartId})
         if(!cart) throw new BadRequestException("Cart does not exist")
-      return  this.cartModel.updateOne({_id:cartId,qty:qty});
+      return  this.cartModel.updateOne({_id:cartId,slot:qty});
     }
   
     async createOrder(createOrderDto: CreateOrderDto):Promise<any> {
@@ -84,16 +79,16 @@ try {
         let totalAmount:number = 0
         const usersCart = await this.cartModel.find({status:true}).populate("Product")
             usersCart.forEach((cart)=>{
-              totalAmount += cart.qty*cart.prod.price
-              if(cart.qty > cart.prod.stock) soldOut.push(cart.prod)
+              if(cart.slot > cart.prod.totalSlots) soldOut.push(cart.prod)
+             else{
+              totalAmount += cart.slot*cart.prod.productPrice
+            } 
             })
-
             if(soldOut.length >0 ) {
-              return  { message:'Following Items/Product is out of Stock',status:200, data:soldOut}
+              return  { message:'Following Items slot has been filled up/Reduce  the number slot Or pick slot for other items',status:200, data:soldOut}
             }
-      //We need payment service here to complete the order flow
-
-      return;
+            // call payment service
+      return "Processing Order";
       } catch (error) {
         if(error.status < 500) throw new BadRequestException(error.message) 
         throw new  InternalServerErrorException(error.message)
@@ -101,6 +96,19 @@ try {
       }
           
        }
+
+checkSlotAvailable(  prod:Product,
+  slot:number):boolean{
+ return prod.totalSlots > slot ?true:false
+}
+
+async updateProductAfterPaymnent(){
+  const usersCart = await this.cartModel.find({status:true}).populate("Product")
+  for (let index = 0; index < usersCart.length; index++) {
+        await this.prodModel.updateOne({_id:usersCart[index].prod._id,totalSlots:usersCart[index].prod.totalSlots-usersCart[index].slot})
+      await  usersCart[index].updateOne({_id:usersCart[index]._id,status:false})
+  }
+}
 
 
 

@@ -13,6 +13,6 @@ export class CreateCatDto {
     @ApiProperty({description: 'productId', example: "btytniykmw477m"})
     prodId: string
     @ApiProperty({description: 'Quantity of product needed', example: 20})
-    qty: number
+    slot: number
 
 }

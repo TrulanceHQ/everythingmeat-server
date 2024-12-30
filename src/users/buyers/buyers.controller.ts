@@ -1,8 +1,18 @@
+
 import { Controller, Get, Post, Body, Patch, Param, Delete, ValidationPipe, Query } from '@nestjs/common';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiBody,
+  ApiResponse,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { BuyersService } from './buyers.service';
 import { UpdateBuyerDto } from './dto/update-buyer.dto';
 import { CreateCatDto } from './dto/create-cat.dto';
 
+@ApiTags('Buyers')
+@ApiBearerAuth()
 @Controller('buyers')
 export class BuyersController {
   constructor(private readonly buyersService: BuyersService) {}

@@ -85,7 +85,7 @@ export class UsersController {
     return this.authService.login(userDto.emailAddress, userDto.password);
   }
 
-  @Roles('admin')
+  @Roles('admin', 'buyer')
   @Get('/user')
   @ApiOperation({ summary: 'Get all users (Admin only)' })
   @ApiResponse({

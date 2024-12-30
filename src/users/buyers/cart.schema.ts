@@ -1,7 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { number } from 'joi';
 import mongoose, { Document } from "mongoose";
-import { Product } from 'src/products/product.schema';
+import { Product } from 'src/products/schema/product.schema';
 
 @Schema ({timestamps:true})
 export class Cart extends Document {
@@ -18,7 +18,7 @@ export class Cart extends Document {
         type:number,
         required:true
    }])
-   qty:number;
+   slot:number;
    @Prop([{
     type:mongoose.Schema.Types.ObjectId,
     ref:'User',
