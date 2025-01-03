@@ -21,12 +21,12 @@ export class CloudinaryService {
           if (error) {
             reject(new Error('Image upload failed'));
           } else {
-            resolve(result.secure_url); // Return the secure URL of the uploaded image
+            resolve(result.secure_url);
           }
         },
       );
 
-      stream.end(file.buffer); // Pass the file buffer to Cloudinary
+      stream.end(file.buffer);
     });
   }
 

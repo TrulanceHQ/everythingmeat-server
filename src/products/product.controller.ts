@@ -11,6 +11,7 @@ import {
   Param,
   Get,
   Query,
+  Delete,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -243,5 +244,26 @@ export class ProductController {
     @Query() query: any,
   ) {
     return this.productService.getAllProductsBySeller(sellerId, query);
+  }
+
+  @Delete(':id')
+  @Roles('seller')
+  @ApiOperation({ summary: 'Delete a product' })
+  @ApiParam({
+    name: 'id',
+    description: 'Product ID',
+    required: true,
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Product successfully deleted',
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Invalid request',
+  })
+  async deleteProduct(@Param('id') productId: string, @Request() req) {
+    const sellerId = req.user.sub;
+    return this.productService.deleteProduct(productId, sellerId);
   }
 }

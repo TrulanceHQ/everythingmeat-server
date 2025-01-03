@@ -88,11 +88,7 @@ export class ProductService {
 
     const updatedProduct = await this.productModel.findByIdAndUpdate(
       productId,
-      {
-        ...product.toObject(),
-        ...updateProductDto,
-        sellerId,
-      },
+      { $set: updateProductDto },
       { new: true },
     );
 
@@ -135,13 +131,18 @@ export class ProductService {
     return product;
   }
 
-  async getAllProductsBySeller(
-    sellerId: string,
-    query: any,
-  ): Promise<any> {
+  async getAllProductsBySeller(sellerId: string, query: any): Promise<any> {
     const { page = 1, limit = 20 } = query;
 
-    const totalProducts = await this.productModel.countDocuments();
+    const sellerExist = await this.productModel.exists({ sellerId });
+    if (!sellerExist) {
+      throw new BadRequestException('Seller not found');
+    }
+
+    const totalProducts = await this.productModel.countDocuments({
+      sellerId: sellerId,
+    });
+
     const totalPages = Math.ceil(totalProducts / limit);
 
     if (page > totalPages) {
@@ -155,11 +156,27 @@ export class ProductService {
       .limit(limit)
       .exec();
 
-      return {
-        totalProducts,
-        totalPages,
-        currentPage: page,
-        products,
-      };
+    return {
+      totalProducts,
+      totalPages,
+      currentPage: page,
+      products,
+    };
+  }
+
+  async deleteProduct(productId: string, sellerId: string): Promise<any> {
+    const product = await this.productModel.findById(productId);
+    if (!product) {
+      throw new BadRequestException('Product not found');
+    }
+
+    if (product.sellerId.toString() !== sellerId) {
+      throw new UnauthorizedException(
+        'You are not authorized to delete this product',
+      );
+    }
+
+    await this.productModel.findByIdAndDelete(productId);
+    return { message: 'Product successfully deleted' };
   }
 }
