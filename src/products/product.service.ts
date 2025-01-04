@@ -57,7 +57,9 @@ export class ProductService {
     productImages?: Express.Multer.File[],
   ): Promise<Product> {
     // Find a product
+    console.log('updateProductDto', updateProductDto);
     const product = await this.productModel.findById(productId);
+    console.log('product', product);
     if (!product) {
       throw new BadRequestException('Product not found');
     }
@@ -86,12 +88,23 @@ export class ProductService {
         );
     }
 
+    // Remove undefined or empty values from updateProductDto
+    const filteredUpdates = Object.fromEntries(
+      Object.entries(updateProductDto).filter(([_, value]) => {
+        if (typeof value === 'number') return value !== 0; // Keep non-zero numbers
+        return value !== undefined && value !== '';
+      }),
+    );
+
+    const updatedFields = { ...product.toObject(), ...filteredUpdates };
+
     const updatedProduct = await this.productModel.findByIdAndUpdate(
       productId,
-      { $set: updateProductDto },
+      { $set: updatedFields },
       { new: true },
     );
 
+    console.log('updatedProduct', updatedProduct);
     return updatedProduct;
   }
 

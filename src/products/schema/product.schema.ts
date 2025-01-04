@@ -16,8 +16,8 @@ export class Product extends Document {
   @Prop({ type: [String], default: [] }) // Array of image URLs
   productImages: string[];
 
-  @Prop({ required: true })
-  processDate: Date;
+  @Prop({ required: false })
+  processDate: string;
 
   @Prop({ required: true })
   location: string;

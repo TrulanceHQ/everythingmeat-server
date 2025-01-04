@@ -1,4 +1,4 @@
-import { IsString, IsNumber, IsDate, IsOptional } from 'class-validator';
+import { IsString, IsNumber, IsOptional } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { PartialType } from '@nestjs/swagger';
@@ -20,10 +20,10 @@ export class CreateProductDto {
   @IsOptional()
   healthSatisfactionImage?: any;
 
-  @ApiProperty({ description: 'Slaughter & Process Date' })
-  @IsDate()
-  @Type(() => Date) // Transform the incoming string to a date
-  processDate: Date;
+  @ApiPropertyOptional({ description: 'Slaughter & Process Date' })
+  @IsString()
+  @IsOptional()
+  processDate?: string;
 
   @ApiProperty({ description: 'Location' })
   @IsString()
