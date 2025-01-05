@@ -32,6 +32,19 @@ export class User extends Document {
 
   @Prop({ default: true })
   isActive: boolean;
+
+  // Seller-specific fields
+  @Prop({ enum: Gender, required: false })
+  gender?: Gender;
+
+  @Prop({ required: false })
+  phoneNumber1?: string;
+
+  @Prop({ required: false })
+  phoneNumber2?: string;
+
+  @Prop({ required: false })
+  image?: string;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
