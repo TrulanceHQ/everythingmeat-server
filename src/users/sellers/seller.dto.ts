@@ -1,4 +1,3 @@
-// src/seller/dto/update-seller.dto.ts
 import { IsOptional, IsString, IsEnum } from 'class-validator';
 import { Gender } from '../../auth/schema/user.schema';
 import { ApiPropertyOptional } from '@nestjs/swagger';
