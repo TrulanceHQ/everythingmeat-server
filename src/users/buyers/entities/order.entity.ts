@@ -7,7 +7,7 @@ export class Order extends Document {
   @Prop([
     {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'Product',
+      ref: 'Products',
       required: true,
     },
   ])
