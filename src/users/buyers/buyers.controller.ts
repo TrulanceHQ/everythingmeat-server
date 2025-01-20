@@ -49,7 +49,6 @@ export class BuyersController {
     return this.buyersService.createOrder(buyerId)
   }
   
-  
   @Roles('buyer')
   @Get("cart/user:carts")
   async getAllCarts(@Query() query: any) {
@@ -61,8 +60,7 @@ export class BuyersController {
     console.log(userId)
     return this.buyersService.getBuyerCarts(userId);
   }
-  ///
-
+  
   // @Patch(':id')
   // update(@Param('id') id: string, @Body() updateBuyerDto: UpdateBuyerDto) {
   //   return this.buyersService.update(+id, updateBuyerDto);

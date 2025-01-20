@@ -82,18 +82,24 @@ try {
       const user = await this.userModel.findOne({_id:userId})
       const carts = await this.cartModel.find({buyer:user,status:true}).populate('prod')
       return carts;
+
+      //async getBuyerCarts(userId: string): Promise<Cart[]> {
+  // Query the cart model to find carts where the buyer matches userId and the status is true
+  //const carts = await this.cartModel.find({ buyer: userId, status: true }).populate('prod');
+  //return carts;
+
     }
 
     async UpdateCartQty(cartId:string,qty:number) {
         const cart =  await  this.cartModel.findOne({_id:cartId})
         if(!cart) throw new BadRequestException("Cart does not exist")
-      return  this.cartModel.updateOne({_id:cartId,slot:qty});
+      return this.cartModel.updateOne({_id:cartId,slot:qty});
     }
   
     async createOrder(buyerId:string):Promise<any> {
       try {
-        const soldOut:any[] = []
-        let totalAmount:number = 0
+        const soldOut:any[] = [];
+        let totalAmount:number = 0; 
         const usersCart = await this.cartModel.find({status:true,_id:buyerId}).populate("Product")
             usersCart.forEach((cart)=>{
               if(cart.slot > cart.prod.totalSlots) soldOut.push(cart.prod)
