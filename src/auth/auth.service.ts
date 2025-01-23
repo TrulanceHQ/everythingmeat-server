@@ -64,8 +64,15 @@ export class AuthService {
     return this.userModel.find().exec();
   }
 
-  async findUsersByRole(role: string): Promise<User[]> {
-    return this.userModel.find({ role: role }).exec();
+  async findUsersByRole(
+    role: string,
+    page: number,
+    limit: number,
+    filter: any,
+  ): Promise<User[]> {
+    const skip = (page - 1) * limit;
+    const query = { role, ...filter };
+    return this.userModel.find(query).skip(skip).limit(limit).exec();
   }
 
   async findUserById(id: string): Promise<User> {
@@ -100,5 +107,9 @@ export class AuthService {
     if (!user) {
       throw new NotFoundException('User not found');
     }
+  }
+
+  async countUsersByRole(role: string): Promise<number> {
+    return this.userModel.countDocuments({ role: role }).exec();
   }
 }

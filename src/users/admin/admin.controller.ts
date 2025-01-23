@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import {
   Controller,
   Get,
@@ -6,6 +7,7 @@ import {
   Patch,
   Body,
   Delete,
+  Query,
 } from '@nestjs/common';
 import { AdminService } from './admin.service';
 import { RolesGuard } from './../../utils/Roles/roles.guard';
@@ -15,6 +17,7 @@ import {
   ApiOperation,
   ApiResponse,
   ApiBearerAuth,
+  ApiQuery,
 } from '@nestjs/swagger';
 import { UpdateUserStatusDto } from 'src/auth/auth.dto';
 
@@ -26,26 +29,71 @@ export class AdminController {
   constructor(private readonly adminService: AdminService) {}
 
   @Roles('admin')
-  @Get('seller')
+  @Get('sellers')
   @ApiOperation({ summary: 'Get all sellers' })
   @ApiResponse({ status: 200, description: 'List of all sellers' })
-  async getAllSellers() {
-    return this.adminService.getAllSellers();
+  @ApiQuery({ name: 'page', required: false, type: Number, example: 1 })
+  @ApiQuery({ name: 'limit', required: false, type: Number, example: 10 })
+  @ApiQuery({ name: 'firstName', required: false, type: String })
+  @ApiQuery({ name: 'lastName', required: false, type: String })
+  @ApiQuery({ name: 'email', required: false, type: String })
+  async getAllSellers(
+    @Query('page') page: number = 1,
+    @Query('limit') limit: number = 10,
+    @Query('firstName') firstName?: string,
+    @Query('lastName') lastName?: string,
+    @Query('email') email?: string,
+  ) {
+    const filter = { firstName, lastName, email };
+    const cleanedFilter = Object.fromEntries(
+      Object.entries(filter).filter(([_, v]) => v != null),
+    );
+    return this.adminService.getAllSellers(page, limit, cleanedFilter);
   }
 
   @Roles('admin')
-  @Get('buyer')
+  @Get('buyers')
   @ApiOperation({ summary: 'Get all buyers' })
   @ApiResponse({ status: 200, description: 'List of all buyers' })
-  async getAllBuyers() {
-    return this.adminService.getAllBuyers();
+  @ApiQuery({ name: 'page', required: false, type: Number, example: 1 })
+  @ApiQuery({ name: 'limit', required: false, type: Number, example: 10 })
+  @ApiQuery({ name: 'firstName', required: false, type: String })
+  @ApiQuery({ name: 'lastName', required: false, type: String })
+  @ApiQuery({ name: 'email', required: false, type: String })
+  async getAllBuyers(
+    @Query('page') page: number = 1,
+    @Query('limit') limit: number = 10,
+    @Query('firstName') firstName?: string,
+    @Query('lastName') lastName?: string,
+    @Query('email') email?: string,
+  ) {
+    const filter = { firstName, lastName, email };
+    const cleanedFilter = Object.fromEntries(
+      Object.entries(filter).filter(([_, v]) => v != null),
+    );
+    return this.adminService.getAllBuyers(page, limit, cleanedFilter);
   }
   @Roles('admin')
-  @Get('admin')
+  @Get('admins')
   @ApiOperation({ summary: 'Get all admins' })
   @ApiResponse({ status: 200, description: 'List of all admins' })
-  async getAllAdmins() {
-    return this.adminService.getAllAdmins();
+  @ApiQuery({ name: 'page', required: false, type: Number, example: 1 })
+  @ApiQuery({ name: 'limit', required: false, type: Number, example: 10 })
+  @ApiQuery({ name: 'firstName', required: false, type: String })
+  @ApiQuery({ name: 'lastName', required: false, type: String })
+  @ApiQuery({ name: 'email', required: false, type: String })
+  async getAllAdmins(
+    @Query('page') page: number = 1,
+    @Query('limit') limit: number = 10,
+    @Query('firstName') firstName?: string,
+    @Query('lastName') lastName?: string,
+    @Query('email') email?: string,
+  ) {
+    const filter = { firstName, lastName, email };
+    const cleanedFilter = Object.fromEntries(
+      Object.entries(filter).filter(([_, v]) => v != null),
+    );
+    return this.adminService.getAllAdmins(page, limit, cleanedFilter);
   }
 
   @Roles('admin')
@@ -79,5 +127,23 @@ export class AdminController {
   @ApiResponse({ status: 404, description: 'User not found' })
   async deleteUser(@Param('id') userId: string) {
     return this.adminService.deleteUser(userId);
+  }
+
+  @Roles('admin')
+  @Get('count/sellers')
+  @ApiOperation({ summary: 'Get total number of sellers' })
+  @ApiResponse({ status: 200, description: 'Total number of sellers' })
+  async countSellers() {
+    const count = await this.adminService.countSellers();
+    return { count };
+  }
+
+  @Roles('admin')
+  @Get('count/buyers')
+  @ApiOperation({ summary: 'Get total number of buyers' })
+  @ApiResponse({ status: 200, description: 'Total number of buyers' })
+  async countBuyers() {
+    const count = await this.adminService.countBuyers();
+    return { count };
   }
 }
