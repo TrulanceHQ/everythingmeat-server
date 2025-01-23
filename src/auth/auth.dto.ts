@@ -11,7 +11,7 @@ import {
 import { UserRole } from './schema/user.schema';
 
 export class CreateUserDto {
-  @ApiProperty({ description: 'First name of the user', example: 'Test' })
+  @ApiProperty({ description: 'First namme of the user', example: 'Test' })
   @IsString()
   @IsNotEmpty()
   readonly firstName: string;
