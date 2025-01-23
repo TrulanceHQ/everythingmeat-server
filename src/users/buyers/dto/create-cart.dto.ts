@@ -5,7 +5,7 @@ interface CartItem {
   productId:string,
   qty:number
 }
-export class CreateCatDto {
+export class CreateCartDto {
     @IsNotEmpty()
       @ApiProperty({ description: 'buyerId', example: 'btytniykmw477m' })
     buyerId:string;

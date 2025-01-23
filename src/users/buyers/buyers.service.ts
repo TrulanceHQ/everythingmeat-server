@@ -5,7 +5,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { User } from 'src/auth/schema/user.schema';
-import { CreateCatDto } from './dto/create-cat.dto';
+import { CreateCartDto } from './dto/create-cart.dto';
 import { Cart } from './cart.schema';
 import { Product } from 'src/products/schema/product.schema';
 
@@ -40,7 +40,7 @@ try {
     return `This action removes a #${id} buyer`;
   }
 
-  async createCart(createCartDto: CreateCatDto):Promise<any> {
+  async createCart(createCartDto: CreateCartDto):Promise<any> {
     try {
       const user =  await  this.userModel.findOne({_id:createCartDto.buyerId})
       if(!user) throw new BadRequestException("user does not exit")
