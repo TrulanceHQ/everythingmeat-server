@@ -12,14 +12,14 @@ import {
 } from '@nestjs/common';
 import {
   ApiTags,
-  // ApiOperation,
-  // ApiBody,
-  // ApiResponse,
+  ApiOperation,
+  ApiBody,
+  ApiResponse,
   ApiBearerAuth,
 } from '@nestjs/swagger';
 import { BuyersService } from './buyers.service';
-// import { UpdateBuyerDto } from './dto/update-buyer.dto';
-import { CreateCatDto } from './dto/create-cat.dto';
+import { UpdateBuyerDto } from './dto/update-buyer.dto';
+import { CreateCartDto } from './dto/create-cart.dto';
 import { UpdateCartDto } from './dto/update-cart.dto';
 // import { CreateOrderDto } from './create-order.dto';
 import { RolesGuard } from 'src/utils/Roles/roles.guard';
@@ -29,54 +29,53 @@ import { Roles } from 'src/utils/Roles/roles.decorator';
 @ApiTags('Buyers')
 @UseGuards(RolesGuard)
 @ApiBearerAuth() // Enables Bearer Token in Swagger UI
-@Controller('api/v1/buyers')
+@Controller('api/v1')
 export class BuyersController {
   constructor(private readonly buyersService: BuyersService) {}
-  @Roles('buyer')
-  @Post('cart')
-  create(@Body(new ValidationPipe()) cartDto: CreateCatDto) {
-    return this.buyersService.createCart(cartDto);
+    @Roles('buyer')
+    @ApiOperation({ summary: 'Create a Cart' })
+    @Post("cart/add")
+  create(@Body( new ValidationPipe()) cartDto: CreateCartDto) {
+    return this.buyersService.createCart(cartDto)
   }
   @Roles('buyer')
-  @Patch('/cart')
-  updateCartItem(
-    @Query(
-      new ValidationPipe({
-        transform: true,
-        transformOptions: { enableImplicitConversion: true },
-        forbidNonWhitelisted: true,
-      }),
-    )
-    query: UpdateCartDto,
-  ) {
-    return this.buyersService.UpdateCartQty(query.cartId, query.slot);
+  @Patch("/cart/update")
+  @ApiOperation({ summary: 'Update the Cart' })
+  updateCartItem(@Query(new ValidationPipe({
+    transform: true,
+    transformOptions: {enableImplicitConversion: true},
+    forbidNonWhitelisted: true
+})) query:UpdateCartDto) {
+    return this.buyersService.UpdateCartQty(query.cartId,query.slot)
   }
 
   @Roles('buyer')
-  @Delete('/cart:id')
-  removeCartItem(@Param('id') id: string) {
-    return this.buyersService.removeItem(id);
+  @Delete("/cart/remove/:id")
+  @ApiOperation({ summary: 'Remove an Item from the Cart' })
+  removeCartItem(@Param('id') id:string ) {
+    return this.buyersService.removeItem(id)
   }
 
   @Roles('buyer')
-  @Post('order')
-  createOrder(@Param('buyerId') buyerId: string) {
-    return this.buyersService.createOrder(buyerId);
+  @Post("orders")
+  @ApiOperation({ summary: 'Place a new Order' })
+  createOrder(@Param('buyerId') buyerId:string) {
+    return this.buyersService.createOrder(buyerId)
   }
-
+  
   @Roles('buyer')
-  @Get('cart/user:carts')
+  @ApiOperation({ summary: 'Get all Buyers in the Cart' })
+  @Get("cart/user:carts")
   async getAllCarts(@Query() query: any) {
     return this.buyersService.getAllCarts(query);
   }
-
-  @Get('cart/user:userId')
+  @ApiOperation({ summary: 'Get the current user(ID) Cart Item' })
+  @Get('cart')
   find(@Param('userId') userId: string) {
     console.log(userId);
     return this.buyersService.getBuyerCarts(userId);
   }
-  ///
-
+  
   // @Patch(':id')
   // update(@Param('id') id: string, @Body() updateBuyerDto: UpdateBuyerDto) {
   //   return this.buyersService.update(+id, updateBuyerDto);
