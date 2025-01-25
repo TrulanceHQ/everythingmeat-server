@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { number } from 'joi';
+// import { number } from 'joi';
 import mongoose, { Document } from "mongoose";
 import { Product } from 'src/products/schema/product.schema';
 
@@ -13,7 +13,7 @@ export class Cart extends Document {
         })
    prod:Product;
    @Prop({
-        type:number,
+        type: Number,
         required:true
    })
    slot:number;

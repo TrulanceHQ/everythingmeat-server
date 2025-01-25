@@ -62,12 +62,10 @@ export class SellerController {
     @Body() sellerDto: SellerDto,
     @UploadedFile() file?: Express.Multer.File,
   ) {
-    console.log('Uploaded id:', id);
-    console.log('Uploaded sellerDto:', sellerDto);
-    console.log('Uploaded file:', file);
     return this.sellerService.updateSeller(id, sellerDto, file);
   }
 
+  @Roles('seller', 'admin', 'buyer')
   @Get(':id')
   @ApiOperation({ summary: 'Get seller by ID' })
   @ApiParam({

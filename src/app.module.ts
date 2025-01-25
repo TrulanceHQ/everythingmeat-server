@@ -7,9 +7,9 @@ import { AppService } from './app.service';
 import { developmentConfig, productionConfig } from './config';
 import { AuthModule } from './auth/auth.module';
 import { BuyersModule } from './users/buyers/buyers.module';
-import *  as dotenv from "dotenv"
-dotenv.config()
-console.log(process.env.DEV_MONGODB_CONNECTION_URL)
+import * as dotenv from 'dotenv';
+dotenv.config();
+console.log(process.env.DEV_MONGODB_CONNECTION_URL);
 import { SellerModule } from './users/sellers/seller.module';
 import { AdminModule } from './users/admin/admin.module';
 import { ProductModule } from './products/product.module';

@@ -13,7 +13,7 @@ export enum Gender {
   FEMALE = 'female',
 }
 
-@Schema()
+@Schema({ timestamps: true })
 export class User extends Document {
   @Prop({ required: true })
   firstName: string;
@@ -32,6 +32,28 @@ export class User extends Document {
 
   @Prop({ default: true })
   isActive: boolean;
+
+  @Prop({ required: false })
+  createdAt?: Date;
+
+  @Prop({ required: false })
+  updatedAt?: Date;
+
+  // Seller-specific fields
+  @Prop({ enum: Gender, required: false })
+  gender?: Gender;
+
+  @Prop({ required: false })
+  phoneNumber1?: string;
+
+  @Prop({ required: false })
+  phoneNumber2?: string;
+
+  @Prop({ required: false })
+  image?: string;
+
+  @Prop({ required: false })
+  order?: number;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

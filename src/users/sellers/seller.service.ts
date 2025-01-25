@@ -25,9 +25,14 @@ export class SellerService {
       sellerDto.image = imageUrl;
     }
 
+    // Filter out undefined, null, or empty values
+    const filteredUpdates = Object.fromEntries(
+      Object.entries(sellerDto).filter(([_, v]) => v !== undefined && v !== ''),
+    );
+
     const updatedSeller = await this.userModel.findByIdAndUpdate(
       id,
-      { $set: sellerDto },
+      { $set: filteredUpdates },
       { new: true },
     );
 

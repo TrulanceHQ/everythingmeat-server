@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { CreateProductDto, UpdateProductDto } from './product.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
@@ -53,9 +57,17 @@ export class ProductService {
     productImages?: Express.Multer.File[],
   ): Promise<Product> {
     // Find a product
+    console.log('updateProductDto', updateProductDto);
     const product = await this.productModel.findById(productId);
+    console.log('product', product);
     if (!product) {
       throw new BadRequestException('Product not found');
+    }
+
+    if (product.sellerId.toString() !== sellerId) {
+      throw new UnauthorizedException(
+        'You are not authorized to update this product',
+      );
     }
 
     // Upload health satisfaction image
@@ -76,29 +88,51 @@ export class ProductService {
         );
     }
 
+    // Remove undefined or empty values from updateProductDto
+    const filteredUpdates = Object.fromEntries(
+      Object.entries(updateProductDto).filter(([_, value]) => {
+        if (typeof value === 'number') return value !== 0; // Keep non-zero numbers
+        return value !== undefined && value !== '';
+      }),
+    );
+
+    const updatedFields = { ...product.toObject(), ...filteredUpdates };
+
     const updatedProduct = await this.productModel.findByIdAndUpdate(
       productId,
-      {
-        ...product.toObject(),
-        ...updateProductDto,
-        sellerId,
-      },
+      { $set: updatedFields },
       { new: true },
     );
 
+    console.log('updatedProduct', updatedProduct);
     return updatedProduct;
   }
 
-  async getAllProducts(query: any): Promise<Product[]> {
+  async getAllProducts(query: any): Promise<any> {
     const { page = 1, limit = 10 } = query;
+
+    const totalProducts = await this.productModel.countDocuments();
+    const totalPages = Math.ceil(totalProducts / limit);
+
+    if (page > totalPages) {
+      throw new BadRequestException(
+        `Page ${page} exceeds total pages ${totalPages}.`,
+      );
+    }
 
     const products = await this.productModel
       .find()
+      .sort({ createdAt: -1 })
       .skip((page - 1) * limit)
-      .limit(limit)
+      .limit(parseInt(limit, 10))
       .exec();
 
-    return products;
+    return {
+      totalProducts,
+      totalPages,
+      currentPage: page,
+      products,
+    };
   }
 
   async getProductById(productId: string): Promise<Product> {
@@ -110,18 +144,52 @@ export class ProductService {
     return product;
   }
 
-  async getAllProductsBySeller(
-    sellerId: string,
-    query: any,
-  ): Promise<Product[]> {
+  async getAllProductsBySeller(sellerId: string, query: any): Promise<any> {
     const { page = 1, limit = 20 } = query;
 
+    const sellerExist = await this.productModel.exists({ sellerId });
+    if (!sellerExist) {
+      throw new BadRequestException('Seller not found');
+    }
+
+    const totalProducts = await this.productModel.countDocuments({
+      sellerId: sellerId,
+    });
+
+    const totalPages = Math.ceil(totalProducts / limit);
+
+    if (page > totalPages) {
+      throw new BadRequestException(
+        `Page ${page} exceeds total pages ${totalPages}.`,
+      );
+    }
     const products = await this.productModel
       .find({ sellerId })
       .skip((page - 1) * limit)
       .limit(limit)
       .exec();
 
-    return products;
+    return {
+      totalProducts,
+      totalPages,
+      currentPage: page,
+      products,
+    };
+  }
+
+  async deleteProduct(productId: string, sellerId: string): Promise<any> {
+    const product = await this.productModel.findById(productId);
+    if (!product) {
+      throw new BadRequestException('Product not found');
+    }
+
+    if (product.sellerId.toString() !== sellerId) {
+      throw new UnauthorizedException(
+        'You are not authorized to delete this product',
+      );
+    }
+
+    await this.productModel.findByIdAndDelete(productId);
+    return { message: 'Product successfully deleted' };
   }
 }

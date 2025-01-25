@@ -11,6 +11,7 @@ import {
   Param,
   Get,
   Query,
+  Delete,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -20,6 +21,7 @@ import {
   ApiConsumes,
   ApiBody,
   ApiParam,
+  ApiQuery,
 } from '@nestjs/swagger';
 import { AnyFilesInterceptor } from '@nestjs/platform-express';
 import { CreateProductDto, UpdateProductDto } from './product.dto';
@@ -40,7 +42,7 @@ const allowedMimesTypes = [
 @Controller('api/v1/products')
 @ApiTags('Sellers')
 @UseGuards(RolesGuard)
-@ApiBearerAuth() // Enables Bearer Token in Swagger UI
+@ApiBearerAuth()
 export class ProductController {
   constructor(private readonly productService: ProductService) {}
 
@@ -166,7 +168,19 @@ export class ProductController {
   }
 
   @Get()
-  @ApiOperation({ summary: 'Get all products' })
+  @ApiOperation({ summary: 'Get all products with pagination' })
+  @ApiQuery({
+    name: 'page',
+    required: false,
+    type: Number,
+    description: 'Page number (default: 1)',
+  })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    type: Number,
+    description: 'Number of items per page (default: 10)',
+  })
   @ApiResponse({
     status: 200,
     description: 'Successfully fetched all products',
@@ -199,11 +213,23 @@ export class ProductController {
   }
 
   @Get('seller/:sellerId')
-  @ApiOperation({ summary: 'Get all products by a seller' })
+  @ApiOperation({ summary: 'Get all products by a seller with pagination' })
   @ApiParam({
     name: 'sellerId',
     description: 'The ID of the seller',
     required: true,
+  })
+  @ApiQuery({
+    name: 'page',
+    required: false,
+    type: Number,
+    description: 'Page number (default: 1)',
+  })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    type: Number,
+    description: 'Number of items per page (default: 10)',
   })
   @ApiResponse({
     status: 200,
@@ -218,5 +244,26 @@ export class ProductController {
     @Query() query: any,
   ) {
     return this.productService.getAllProductsBySeller(sellerId, query);
+  }
+
+  @Delete(':id')
+  @Roles('seller')
+  @ApiOperation({ summary: 'Delete a product' })
+  @ApiParam({
+    name: 'id',
+    description: 'Product ID',
+    required: true,
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Product successfully deleted',
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Invalid request',
+  })
+  async deleteProduct(@Param('id') productId: string, @Request() req) {
+    const sellerId = req.user.sub;
+    return this.productService.deleteProduct(productId, sellerId);
   }
 }
