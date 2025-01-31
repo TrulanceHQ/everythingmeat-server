@@ -28,6 +28,12 @@ export class Product extends Document {
   @Prop({ required: true })
   totalSlots: number;
 
+  @Prop({ required: true })
+  availableSlots: number;
+
+  @Prop({ required: true })
+  takenSlots: number;
+
   @Prop({ type: Types.ObjectId, ref: 'User', required: true }) // Reference to User (Seller)
   sellerId: User;
 }
