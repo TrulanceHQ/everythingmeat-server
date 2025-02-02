@@ -45,6 +45,12 @@ export class User extends Document {
   @Prop({ required: false })
   verificationCodeExpires?: Date;
 
+  @Prop({ required: false })
+  resetCode?: string;
+
+  @Prop({ required: false })
+  resetCodeExpires?: Date;
+
   @Prop({ default: false })
   isVerified: boolean;
 

@@ -41,7 +41,9 @@ export class AuthService {
       100000 + Math.random() * 900000,
     ).toString();
     const verificationCodeExpires = new Date();
-    verificationCodeExpires.setHours(verificationCodeExpires.getHours() + 1); // Code expires in 1 hour
+    verificationCodeExpires.setMinutes(
+      verificationCodeExpires.getMinutes() + 2,
+    ); // Code expires in 2 minutes
 
     const createdUser = new this.userModel({
       ...createUserDto,
@@ -101,6 +103,46 @@ export class AuthService {
 
   async findAll(): Promise<User[]> {
     return this.userModel.find().exec();
+  }
+
+  async forgotPassword(emailAddress: string): Promise<void> {
+    const user = await this.userModel.findOne({ emailAddress }).exec();
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    const resetCode = Math.floor(100000 + Math.random() * 900000).toString();
+    const resetCodeExpires = new Date();
+    resetCodeExpires.setMinutes(resetCodeExpires.getMinutes() + 2); // Code expires in 2 minutes
+    user.resetCode = resetCode;
+    user.resetCodeExpires = resetCodeExpires;
+    await user.save();
+
+    await this.emailUtil.sendEmail(
+      emailAddress,
+      'Reset Password',
+      'reset-password',
+      { code: resetCode },
+    );
+
+    return;
+  }
+
+  async resetPassword(
+    emailAddress: string,
+    code: string,
+    newPassword: string,
+  ): Promise<void> {
+    const user = await this.userModel.findOne({ emailAddress }).exec();
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    if (user.resetCode !== code || user.resetCodeExpires < new Date()) {
+      throw new BadRequestException('Invalid or expired reset code');
+    }
+    user.password = await bcrypt.hash(newPassword, 10);
+    user.resetCode = undefined;
+    user.resetCodeExpires = undefined;
+    await user.save();
   }
 
   async findUsersByRole(

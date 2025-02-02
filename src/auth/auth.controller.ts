@@ -51,7 +51,13 @@ import {
   ApiBearerAuth,
 } from '@nestjs/swagger';
 import { AuthService, LoginResponse } from './auth.service';
-import { CreateUserDto, LoginUserDto, VerifyEmailDto } from './auth.dto';
+import {
+  CreateUserDto,
+  ForgotPasswordDto,
+  LoginUserDto,
+  ResetPasswordDto,
+  VerifyEmailDto,
+} from './auth.dto';
 import { LocalAuthGuard } from '../utils/LocalGuard/local-auth.guard';
 import { RolesGuard } from '../utils/Roles/roles.guard';
 import { Roles } from '../utils/Roles/roles.decorator';
@@ -102,6 +108,29 @@ export class UsersController {
   })
   async login(@Body() userDto: LoginUserDto): Promise<LoginResponse> {
     return this.authService.login(userDto.emailAddress, userDto.password);
+  }
+
+  @Post('/forgot-password')
+  @ApiOperation({ summary: 'Forgot Password' })
+  @ApiBody({ type: ForgotPasswordDto })
+  @ApiResponse({ status: 200, description: 'Reset code sent to email' })
+  @ApiResponse({ status: 404, description: 'User not found' })
+  async forgotPassword(@Body() forgotPasswordDto: ForgotPasswordDto) {
+    const { emailAddress } = forgotPasswordDto;
+    await this.authService.forgotPassword(emailAddress);
+    return { message: 'Reset code sent to email' };
+  }
+
+  @Post('/reset-password')
+  @ApiOperation({ summary: 'Reset Password' })
+  @ApiBody({ type: ResetPasswordDto })
+  @ApiResponse({ status: 200, description: 'Password reset successfully' })
+  @ApiResponse({ status: 400, description: 'Invalid or expired reset code' })
+  @ApiResponse({ status: 404, description: 'User not found' })
+  async resetPassword(@Body() resetPasswordDto: ResetPasswordDto) {
+    const { emailAddress, code, newPassword } = resetPasswordDto;
+    await this.authService.resetPassword(emailAddress, code, newPassword);
+    return { message: 'Password reset successfully' };
   }
 
   @Roles('admin', 'buyer')
