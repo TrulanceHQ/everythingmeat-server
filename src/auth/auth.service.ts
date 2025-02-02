@@ -12,6 +12,7 @@ import { User } from './schema/user.schema';
 import { CreateUserDto } from './auth.dto';
 import * as bcrypt from 'bcryptjs';
 import { isValidObjectId } from 'mongoose';
+import { EmailUtil } from 'src/utils/email/email.util';
 
 export interface LoginResponse {
   accessToken: string;
@@ -23,6 +24,7 @@ export class AuthService {
   constructor(
     @InjectModel(User.name) private userModel: Model<User>,
     private jwtService: JwtService,
+    private emailUtil: EmailUtil,
   ) {}
 
   async create(createUserDto: CreateUserDto): Promise<User> {
@@ -35,10 +37,27 @@ export class AuthService {
       );
     }
     const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
+    const verificationCode = Math.floor(
+      100000 + Math.random() * 900000,
+    ).toString();
+    const verificationCodeExpires = new Date();
+    verificationCodeExpires.setHours(verificationCodeExpires.getHours() + 1); // Code expires in 1 hour
+
     const createdUser = new this.userModel({
       ...createUserDto,
       password: hashedPassword,
+      verificationCode,
+      verificationCodeExpires,
+      isVerified: false,
     });
+
+    await this.emailUtil.sendEmail(
+      createUserDto.emailAddress,
+      'Email Verification',
+      'verification-code',
+      { code: verificationCode },
+    );
+
     return createdUser.save();
   }
 
@@ -47,6 +66,9 @@ export class AuthService {
     password: string,
   ): Promise<LoginResponse | null> {
     const user = await this.userModel.findOne({ emailAddress }).exec();
+    if (!user.isVerified) {
+      throw new UnauthorizedException('Email not verified');
+    }
     if (user && (await bcrypt.compare(password, user.password))) {
       // Generate JWT token
       const payload = {
@@ -58,6 +80,23 @@ export class AuthService {
       return { accessToken, user };
     }
     throw new UnauthorizedException('Invalid credentials');
+  }
+
+  async verifyEmail(emailAddress: string, code: string): Promise<void> {
+    const user = await this.userModel.findOne({ emailAddress }).exec();
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    if (
+      user.verificationCode !== code ||
+      user.verificationCodeExpires < new Date()
+    ) {
+      throw new BadRequestException('Invalid or expired verification code');
+    }
+    user.isVerified = true;
+    user.verificationCode = undefined;
+    user.verificationCodeExpires = undefined;
+    await user.save();
   }
 
   async findAll(): Promise<User[]> {

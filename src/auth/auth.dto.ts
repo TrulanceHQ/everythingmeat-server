@@ -75,3 +75,19 @@ export class UpdateUserStatusDto {
   @IsBoolean()
   isActive: boolean;
 }
+
+export class VerifyEmailDto {
+  @ApiProperty({
+    description: 'Enter the email address to verify',
+  })
+  @IsEmail()
+  @IsNotEmpty()
+  emailAddress: string;
+
+  @ApiProperty({
+    description: 'Enter the verification code sent to the email address',
+  })
+  @IsString()
+  @IsNotEmpty()
+  code: string;
+}

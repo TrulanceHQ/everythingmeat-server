@@ -51,12 +51,12 @@ import {
   ApiBearerAuth,
 } from '@nestjs/swagger';
 import { AuthService, LoginResponse } from './auth.service';
-import { CreateUserDto, LoginUserDto } from './auth.dto';
+import { CreateUserDto, LoginUserDto, VerifyEmailDto } from './auth.dto';
 import { LocalAuthGuard } from '../utils/LocalGuard/local-auth.guard';
 import { RolesGuard } from '../utils/Roles/roles.guard';
 import { Roles } from '../utils/Roles/roles.decorator';
 
-@ApiTags('Users')
+@ApiTags('Auth')
 @ApiBearerAuth()
 @Controller('api/v1')
 @UseGuards(RolesGuard)
@@ -69,6 +69,25 @@ export class UsersController {
   @ApiResponse({ status: 409, description: 'Conflict: Email already exists' })
   async create(@Body() userDto: CreateUserDto) {
     return this.authService.create(userDto);
+  }
+
+  @Post('/verify-email')
+  @ApiOperation({ summary: 'Verify New User Email' })
+  @ApiBody({ type: VerifyEmailDto })
+  @ApiResponse({ status: 200, description: 'Email verified successfully' })
+  @ApiResponse({
+    status: 400,
+    description: 'Invalid or expired verification code',
+  })
+  @ApiResponse({ status: 404, description: 'User not found' })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized: Invalid credentials',
+  })
+  async verifyEmail(@Body() verifyEmailDto: VerifyEmailDto) {
+    const { emailAddress, code } = verifyEmailDto;
+    await this.authService.verifyEmail(emailAddress, code);
+    return { message: 'Email verified successfully' };
   }
 
   @HttpCode(200)

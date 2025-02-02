@@ -39,6 +39,15 @@ export class User extends Document {
   @Prop({ required: false })
   updatedAt?: Date;
 
+  @Prop({ required: false })
+  verificationCode?: string;
+
+  @Prop({ required: false })
+  verificationCodeExpires?: Date;
+
+  @Prop({ default: false })
+  isVerified: boolean;
+
   // Seller-specific fields
   @Prop({ enum: Gender, required: false })
   gender?: Gender;
