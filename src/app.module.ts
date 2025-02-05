@@ -13,6 +13,7 @@ console.log(process.env.DEV_MONGODB_CONNECTION_URL);
 import { SellerModule } from './users/sellers/seller.module';
 import { AdminModule } from './users/admin/admin.module';
 import { ProductModule } from './products/product.module';
+import { PaymentModule } from './payment/payment.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -43,6 +44,7 @@ import { ProductModule } from './products/product.module';
     SellerModule,
     AdminModule,
     ProductModule,
+    PaymentModule,
   ],
   controllers: [AppController],
   providers: [AppService],
