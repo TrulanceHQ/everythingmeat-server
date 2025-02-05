@@ -62,7 +62,8 @@ export class AdminService {
   }
 
   async deleteUser(id: string) {
-    return this.authService.deleteUser(id);
+    await this.authService.deleteUser(id);
+    return { message: 'User deleted successfully' };
   }
 
   async countSellers(): Promise<number> {

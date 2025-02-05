@@ -1,40 +1,3 @@
-// import {
-//   Controller,
-//   Get,
-//   Post,
-//   Body,
-//   HttpCode,
-//   UseGuards,
-// } from '@nestjs/common';
-// import { AuthService, LoginResponse } from './auth.service';
-// import { CreateUserDto, LoginUserDto } from './auth.dto';
-// import { LocalAuthGuard } from '../utils/LocalGuard/local-auth.guard';
-// import { RolesGuard } from '../utils/Roles/roles.guard';
-// import { Roles } from '../utils/Roles/roles.decorator';
-
-// @Controller('api/v1')
-// @UseGuards(RolesGuard)
-// export class UsersController {
-//   constructor(private readonly authService: AuthService) {}
-
-//   @Post('/register')
-//   async create(@Body() userDto: CreateUserDto) {
-//     return this.authService.create(userDto);
-//   }
-//   @HttpCode(200)
-//   @UseGuards(LocalAuthGuard)
-//   @Post('/login')
-//   async login(@Body() userDto: LoginUserDto): Promise<LoginResponse> {
-//     return this.authService.login(userDto.emailAddress, userDto.password);
-//   }
-
-//   @Roles('admin')
-//   @Get('/user')
-//   async findAll() {
-//     return this.authService.findAll();
-//   }
-// }
-
 import {
   Controller,
   Get,
@@ -42,6 +5,10 @@ import {
   Body,
   HttpCode,
   UseGuards,
+  Patch,
+  Param,
+  UploadedFile,
+  UseInterceptors,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -49,16 +16,20 @@ import {
   ApiBody,
   ApiResponse,
   ApiBearerAuth,
+  ApiConsumes,
 } from '@nestjs/swagger';
 import { AuthService, LoginResponse } from './auth.service';
 import {
+  ChangePasswordDto,
   CreateUserDto,
   ForgotPasswordDto,
   LoginUserDto,
   ResetPasswordDto,
+  UpdateUserDto,
   VerifyEmailDto,
 } from './auth.dto';
 import { LocalAuthGuard } from '../utils/LocalGuard/local-auth.guard';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { RolesGuard } from '../utils/Roles/roles.guard';
 import { Roles } from '../utils/Roles/roles.decorator';
 
@@ -110,6 +81,25 @@ export class UsersController {
     return this.authService.login(userDto.emailAddress, userDto.password);
   }
 
+  @Roles('admin', 'seller', 'buyer')
+  @Patch('/update-user/:id')
+  @UseInterceptors(FileInterceptor('image'))
+  @ApiOperation({ summary: 'Update user details' })
+  @ApiConsumes('multipart/form-data')
+  @ApiResponse({
+    status: 200,
+    description: 'User details updated successfully',
+  })
+  @ApiResponse({ status: 404, description: 'User not found' })
+  async updateUser(
+    @Param('id') id: string,
+    @Body() updateUserDto: UpdateUserDto,
+    @UploadedFile() file?: Express.Multer.File,
+  ) {
+    return this.authService.updateUser(id, updateUserDto, file);
+  }
+
+  @Roles('admin', 'seller', 'buyer')
   @Post('/forgot-password')
   @ApiOperation({ summary: 'Forgot Password' })
   @ApiBody({ type: ForgotPasswordDto })
@@ -121,6 +111,7 @@ export class UsersController {
     return { message: 'Reset code sent to email' };
   }
 
+  @Roles('admin', 'seller', 'buyer')
   @Post('/reset-password')
   @ApiOperation({ summary: 'Reset Password' })
   @ApiBody({ type: ResetPasswordDto })
@@ -133,7 +124,23 @@ export class UsersController {
     return { message: 'Password reset successfully' };
   }
 
-  @Roles('admin', 'buyer')
+  @Roles('admin', 'seller', 'buyer')
+  @Patch('/change-password/:id')
+  @ApiOperation({ summary: 'Change user password' })
+  @ApiBody({ type: ChangePasswordDto })
+  @ApiResponse({ status: 200, description: 'Password changed successfully' })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized: Old password is incorrect',
+  })
+  @ApiResponse({ status: 404, description: 'User not found' })
+  async changePassword(
+    @Param('id') id: string,
+    @Body() changePasswordDto: ChangePasswordDto,
+  ) {
+    return this.authService.updatePassword(id, changePasswordDto);
+  }
+  @Roles('admin')
   @Get('/user')
   @ApiOperation({ summary: 'Get all users (Admin only)' })
   @ApiResponse({

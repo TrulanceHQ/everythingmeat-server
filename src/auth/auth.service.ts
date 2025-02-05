@@ -9,24 +9,23 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { JwtService } from '@nestjs/jwt';
 import { User } from './schema/user.schema';
-import { CreateUserDto } from './auth.dto';
+import { ChangePasswordDto, CreateUserDto, UpdateUserDto } from './auth.dto';
 import * as bcrypt from 'bcryptjs';
 import { isValidObjectId } from 'mongoose';
 import { EmailUtil } from 'src/utils/email/email.util';
-
+import { CloudinaryService } from 'src/utils/cloudinary/cloudinary.service';
 export interface LoginResponse {
   accessToken: string;
   user: User;
 }
-
 @Injectable()
 export class AuthService {
   constructor(
     @InjectModel(User.name) private userModel: Model<User>,
+    private cloudinaryService: CloudinaryService,
     private jwtService: JwtService,
     private emailUtil: EmailUtil,
   ) {}
-
   async create(createUserDto: CreateUserDto): Promise<User> {
     const existingUser = await this.userModel
       .findOne({ emailAddress: createUserDto.emailAddress })
@@ -62,7 +61,6 @@ export class AuthService {
 
     return createdUser.save();
   }
-
   async login(
     emailAddress: string,
     password: string,
@@ -81,9 +79,8 @@ export class AuthService {
       const accessToken = this.jwtService.sign(payload);
       return { accessToken, user };
     }
-    throw new UnauthorizedException('Invalid credentials');
+    throw new UnauthorizedException('Username or Password Incorrect');
   }
-
   async verifyEmail(emailAddress: string, code: string): Promise<void> {
     const user = await this.userModel.findOne({ emailAddress }).exec();
     if (!user) {
@@ -96,15 +93,14 @@ export class AuthService {
       throw new BadRequestException('Invalid or expired verification code');
     }
     user.isVerified = true;
+    user.isActive = true;
     user.verificationCode = undefined;
     user.verificationCodeExpires = undefined;
     await user.save();
   }
-
   async findAll(): Promise<User[]> {
     return this.userModel.find().exec();
   }
-
   async forgotPassword(emailAddress: string): Promise<void> {
     const user = await this.userModel.findOne({ emailAddress }).exec();
     if (!user) {
@@ -112,7 +108,7 @@ export class AuthService {
     }
     const resetCode = Math.floor(100000 + Math.random() * 900000).toString();
     const resetCodeExpires = new Date();
-    resetCodeExpires.setMinutes(resetCodeExpires.getMinutes() + 2); // Code expires in 2 minutes
+    resetCodeExpires.setMinutes(resetCodeExpires.getMinutes() + 2);
     user.resetCode = resetCode;
     user.resetCodeExpires = resetCodeExpires;
     await user.save();
@@ -126,7 +122,6 @@ export class AuthService {
 
     return;
   }
-
   async resetPassword(
     emailAddress: string,
     code: string,
@@ -144,7 +139,6 @@ export class AuthService {
     user.resetCodeExpires = undefined;
     await user.save();
   }
-
   async findUsersByRole(
     role: string,
     page: number,
@@ -155,7 +149,6 @@ export class AuthService {
     const query = { role, ...filter };
     return this.userModel.find(query).skip(skip).limit(limit).exec();
   }
-
   async findUserById(id: string): Promise<User> {
     if (!isValidObjectId(id)) {
       throw new BadRequestException('Invalid user ID format');
@@ -166,7 +159,6 @@ export class AuthService {
     }
     return user;
   }
-
   async updateUserStatus(id: string, isActive: boolean): Promise<User> {
     if (!isValidObjectId(id)) {
       throw new BadRequestException('Invalid user ID format');
@@ -179,7 +171,6 @@ export class AuthService {
     }
     return user;
   }
-
   async deleteUser(id: string): Promise<void> {
     if (!isValidObjectId(id)) {
       throw new BadRequestException('Invalid user ID format');
@@ -189,8 +180,51 @@ export class AuthService {
       throw new NotFoundException('User not found');
     }
   }
-
   async countUsersByRole(role: string): Promise<number> {
     return this.userModel.countDocuments({ role: role }).exec();
+  }
+  async updateUser(
+    id: string,
+    UpdateUserDto: UpdateUserDto,
+    file?: Express.Multer.File,
+  ): Promise<{ message: string; user: User }> {
+    if (file) {
+      const imageUrl = await this.cloudinaryService.uploadImage(file, 'users');
+      UpdateUserDto.image = imageUrl;
+    }
+    // Filter out undefined, null, or empty values
+    const filteredUpdates = Object.fromEntries(
+      Object.entries(UpdateUserDto).filter(
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        ([_, v]) => v !== undefined && v !== '',
+      ),
+    );
+
+    const updatedUser = await this.userModel.findByIdAndUpdate(
+      id,
+      { $set: filteredUpdates },
+      { new: true },
+    );
+
+    if (!updatedUser) {
+      throw new NotFoundException('User not found');
+    }
+    return { message: 'User updated successfully', user: updatedUser };
+  }
+
+  async updatePassword(
+    id: string,
+    changePasswordDto: ChangePasswordDto,
+  ): Promise<{ message: string }> {
+    const user = await this.userModel.findById(id).exec();
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    if (!(await bcrypt.compare(changePasswordDto.oldPassword, user.password))) {
+      throw new BadRequestException('Old password is incorrect');
+    }
+    user.password = await bcrypt.hash(changePasswordDto.newPassword, 10);
+    await user.save();
+    return { message: 'Password updated successfully' };
   }
 }
