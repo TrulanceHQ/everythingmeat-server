@@ -24,6 +24,7 @@ import {
   CreateUserDto,
   ForgotPasswordDto,
   LoginUserDto,
+  ResendVerificationCodeDto,
   ResetPasswordDto,
   UpdateUserDto,
   VerifyEmailDto,
@@ -32,6 +33,7 @@ import { LocalAuthGuard } from '../utils/LocalGuard/local-auth.guard';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { RolesGuard } from '../utils/Roles/roles.guard';
 import { Roles } from '../utils/Roles/roles.decorator';
+import { VerifiedUserGuard } from 'src/utils/verifiredUserGuard/verified-user.guard';
 
 @ApiTags('Auth')
 @ApiBearerAuth()
@@ -67,8 +69,24 @@ export class UsersController {
     return { message: 'Email verified successfully' };
   }
 
+  @Post('/resend-verification-code')
+  @ApiOperation({ summary: 'Resend Verification Code' })
+  @ApiBody({ type: ResendVerificationCodeDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Verification code resent successfully',
+  })
+  @ApiResponse({ status: 404, description: 'User not found' })
+  @ApiResponse({ status: 400, description: 'User is already verified' })
+  async resendVerificationCode(
+    @Body() resendVerificationCodeDto: ResendVerificationCodeDto,
+  ) {
+    const { emailAddress } = resendVerificationCodeDto;
+    return this.authService.resendVerificationCode(emailAddress);
+  }
+
   @HttpCode(200)
-  @UseGuards(LocalAuthGuard)
+  @UseGuards(LocalAuthGuard, VerifiedUserGuard)
   @Post('/login')
   @ApiOperation({ summary: 'Log in a user' })
   @ApiBody({ type: LoginUserDto })
@@ -82,6 +100,7 @@ export class UsersController {
   }
 
   @Roles('admin', 'seller', 'buyer')
+  @UseGuards(VerifiedUserGuard)
   @Patch('/update-user/:id')
   @UseInterceptors(FileInterceptor('image'))
   @ApiOperation({ summary: 'Update user details' })
@@ -100,6 +119,7 @@ export class UsersController {
   }
 
   @Roles('admin', 'seller', 'buyer')
+  @UseGuards(VerifiedUserGuard)
   @Post('/forgot-password')
   @ApiOperation({ summary: 'Forgot Password' })
   @ApiBody({ type: ForgotPasswordDto })
@@ -112,6 +132,7 @@ export class UsersController {
   }
 
   @Roles('admin', 'seller', 'buyer')
+  @UseGuards(VerifiedUserGuard)
   @Post('/reset-password')
   @ApiOperation({ summary: 'Reset Password' })
   @ApiBody({ type: ResetPasswordDto })
@@ -125,6 +146,7 @@ export class UsersController {
   }
 
   @Roles('admin', 'seller', 'buyer')
+  @UseGuards(VerifiedUserGuard)
   @Patch('/change-password/:id')
   @ApiOperation({ summary: 'Change user password' })
   @ApiBody({ type: ChangePasswordDto })
@@ -141,6 +163,7 @@ export class UsersController {
     return this.authService.updatePassword(id, changePasswordDto);
   }
   @Roles('admin')
+  @UseGuards(VerifiedUserGuard)
   @Get('/user')
   @ApiOperation({ summary: 'Get all users (Admin only)' })
   @ApiResponse({
