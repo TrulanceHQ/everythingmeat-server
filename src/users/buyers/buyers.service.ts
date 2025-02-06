@@ -2,6 +2,7 @@ import {
   BadRequestException,
   Injectable,
   InternalServerErrorException,
+  NotFoundException,
 } from '@nestjs/common';
 import { UpdateBuyerDto } from './dto/update-buyer.dto';
 import { Order, OrderSchema } from './order.schema';
@@ -180,6 +181,8 @@ async updateProductAfterPaymnent(id:string){
       await order.save()
 
     }
+
+    
 
 
 

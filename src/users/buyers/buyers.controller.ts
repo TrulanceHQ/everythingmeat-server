@@ -73,6 +73,12 @@ export class BuyersController {
   createOrder(@Param('buyerId') buyerId:string) {
     return this.buyersService.createOrder(buyerId)
   }
+
+
+  
+
+
+
   
   // @Patch(':id')
   // update(@Param('id') id: string, @Body() updateBuyerDto: UpdateBuyerDto) {
