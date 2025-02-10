@@ -7,6 +7,7 @@ import { CloudinaryModule } from '../utils/cloudinary/cloudinary.module';
 import { User, UserSchema } from '../auth/schema/user.schema';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { AuthModule } from 'src/auth/auth.module';
 @Module({
   imports: [
     JwtModule.registerAsync({
@@ -22,6 +23,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
       { name: User.name, schema: UserSchema },
     ]),
     CloudinaryModule,
+    AuthModule,
   ],
   controllers: [ProductController],
   providers: [ProductService],
