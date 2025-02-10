@@ -74,19 +74,4 @@ export class BuyersController {
     return this.buyersService.createOrder(buyerId)
   }
 
-
-  
-
-
-
-  
-  // @Patch(':id')
-  // update(@Param('id') id: string, @Body() updateBuyerDto: UpdateBuyerDto) {
-  //   return this.buyersService.update(+id, updateBuyerDto);
-  // }
-
-  // @Delete(':id')
-  // remove(@Param('id') id: string) {
-  //   return this.buyersService.remove(+id);
-  // }
 }
