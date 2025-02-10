@@ -12,13 +12,11 @@ import {
 } from '@nestjs/common';
 import {
   ApiTags,
-  ApiBody,
-  ApiResponse,
-  ApiBearerAuth,
   ApiOperation,
+  ApiBearerAuth,
 } from '@nestjs/swagger';
 import { BuyersService } from './buyers.service';
-import { UpdateBuyerDto } from './dto/update-buyer.dto';
+// import { UpdateBuyerDto } from './dto/update-buyer.dto';
 import { CreateCartDto } from './dto/create-cart.dto';
 import { UpdateCartDto } from './dto/update-cart.dto';
 // import { CreateOrderDto } from './create-order.dto';
@@ -32,33 +30,44 @@ import { Roles } from 'src/utils/Roles/roles.decorator';
 @Controller('api/v1')
 export class BuyersController {
   constructor(private readonly buyersService: BuyersService) {}
-    @Roles('buyer')
-    @ApiOperation({ summary: 'Create a Cart' })
-    @Post("cart/add")
-  create(@Body( new ValidationPipe()) cartDto: CreateCartDto) {
-    return this.buyersService.createCart(cartDto)
+  @Roles('buyer')
+  @ApiOperation({ summary: 'Create a Cart' })
+  @Post('cart/add')
+  create(@Body(new ValidationPipe()) cartDto: CreateCartDto) {
+    return this.buyersService.createCart(cartDto);
   }
   @Roles('buyer')
-  @Patch("/cart/update")
+  @Patch('/cart/update')
   @ApiOperation({ summary: 'Update the Cart' })
-  updateCartItem(@Query(new ValidationPipe({
-    transform: true,
-    transformOptions: {enableImplicitConversion: true},
-    forbidNonWhitelisted: true
-})) query:UpdateCartDto) {
-    return this.buyersService.UpdateCartQty(query.cartId,query.slot)
+  updateCartItem(
+    @Query(
+      new ValidationPipe({
+        transform: true,
+        transformOptions: { enableImplicitConversion: true },
+        forbidNonWhitelisted: true,
+      }),
+    )
+    query: UpdateCartDto,
+  ) {
+    return this.buyersService.UpdateCartQty(query.cartId, query.slot);
   }
 
   @Roles('buyer')
-  @Delete("/cart/remove/:id")
+  @Delete('/cart/remove/:id')
   @ApiOperation({ summary: 'Remove an Item from the Cart' })
-  removeCartItem(@Param('id') id:string ) {
-    return this.buyersService.removeItem(id)
+  removeCartItem(@Param('id') id: string) {
+    return this.buyersService.removeItem(id);
   }
-  
+
+  @Roles('buyer')
+  @Post('orders')
+  @ApiOperation({ summary: 'Place a new Order' })
+  createOrder(@Param('buyerId') buyerId: string) {
+    return this.buyersService.createOrder(buyerId);
+  }
   @Roles('buyer')
   @ApiOperation({ summary: 'Get all Buyers in the Cart' })
-  @Get("cart/user:carts")
+  @Get('cart/user:carts')
   async getAllCarts(@Query() query: any) {
     return this.buyersService.getAllCarts(query);
   }
@@ -67,19 +76,7 @@ export class BuyersController {
   find(@Param('userId') userId: string) {
     console.log(userId);
     return this.buyersService.getBuyerCarts(userId);
-  }  @Roles('buyer')
-  @Get("/orders/:buyerId")
-  @ApiOperation({ summary: 'Place a new Order' })
-  createOrder(@Param('buyerId') buyerId:string) {
-    return this.buyersService.createOrder(buyerId)
   }
-
-
-  
-
-
-
-  
   // @Patch(':id')
   // update(@Param('id') id: string, @Body() updateBuyerDto: UpdateBuyerDto) {
   //   return this.buyersService.update(+id, updateBuyerDto);

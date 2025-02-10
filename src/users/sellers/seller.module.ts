@@ -6,6 +6,7 @@ import { User, UserSchema } from '../../auth/schema/user.schema';
 import { CloudinaryModule } from '../../utils/cloudinary/cloudinary.module';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { AuthModule } from 'src/auth/auth.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
     }),
     MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
     CloudinaryModule,
+    AuthModule,
   ],
   controllers: [SellerController],
   providers: [SellerService],

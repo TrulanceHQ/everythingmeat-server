@@ -30,7 +30,7 @@ export class User extends Document {
   @Prop({ required: true, enum: UserRole })
   role: UserRole;
 
-  @Prop({ default: true })
+  @Prop({ default: false })
   isActive: boolean;
 
   @Prop({ required: false })
@@ -38,6 +38,24 @@ export class User extends Document {
 
   @Prop({ required: false })
   updatedAt?: Date;
+
+  @Prop({ required: false })
+  verificationCode?: string;
+
+  @Prop({ required: false })
+  verificationCodeExpires?: Date;
+
+  @Prop({ required: false })
+  resetCode?: string;
+
+  @Prop({ required: false })
+  resetCodeExpires?: Date;
+
+  @Prop({ default: false })
+  isVerified: boolean;
+
+  @Prop({ required: false })
+  currentToken?: string;
 
   // Seller-specific fields
   @Prop({ enum: Gender, required: false })

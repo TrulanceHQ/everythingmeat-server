@@ -27,6 +27,7 @@ export class SellerService {
 
     // Filter out undefined, null, or empty values
     const filteredUpdates = Object.fromEntries(
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       Object.entries(sellerDto).filter(([_, v]) => v !== undefined && v !== ''),
     );
 
