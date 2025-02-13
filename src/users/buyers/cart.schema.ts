@@ -1,6 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 // import { number } from 'joi';
 import mongoose, { Document } from "mongoose";
+import { User } from 'src/auth/schema/user.schema';
 import { Product } from 'src/products/schema/product.schema';
 
 @Schema ({timestamps:true})
@@ -22,7 +23,7 @@ export class Cart extends Document {
     ref:'User',
     required:true
 })
-   buyer:mongoose.Schema.Types.ObjectId;
+   buyer:User;
 
    @Prop(
     {

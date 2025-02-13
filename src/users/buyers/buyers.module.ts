@@ -9,6 +9,8 @@ import { Product, ProductSchema } from 'src/products/schema/product.schema';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AuthModule } from 'src/auth/auth.module';
+import { WalletModule } from 'src/wallet/wallet.module';
+import { SellerModule } from '../sellers/seller.module';
 
 @Module({
   imports: [
@@ -27,7 +29,9 @@ import { AuthModule } from 'src/auth/auth.module';
       { name: User.name, schema: UserSchema },
       { name: Product.name, schema: ProductSchema },
     ]),
+    WalletModule,
     AuthModule,
+    SellerModule
   ],
   controllers: [BuyersController],
   providers: [BuyersService],

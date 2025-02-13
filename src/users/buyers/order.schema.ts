@@ -4,13 +4,6 @@ import mongoose, { Document } from "mongoose";
 import { User } from 'src/auth/schema/user.schema';
 @Schema({ timestamps: true })
 export class Order extends Document {
-
-    @Prop([{
-        type:mongoose.Schema.Types.ObjectId,
-        ref:'OrderDetail',
-        required:true
-    }])
-   orderDetails:[mongoose.Schema.Types.ObjectId];
    @Prop([{
     type:mongoose.Schema.Types.ObjectId,
     ref:'User',
@@ -24,6 +17,15 @@ export class Order extends Document {
     }
    )
    status:string;
+   @Prop([{
+    type:mongoose.Schema.Types.ObjectId,
+    ref:'Product',
+    required:true
+}])
+
+prod:mongoose.Schema.Types.ObjectId;
+grossAmount:number;
+slot: number;
 
 }
 export const OrderSchema = SchemaFactory.createForClass(Order);

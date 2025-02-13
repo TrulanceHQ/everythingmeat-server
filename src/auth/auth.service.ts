@@ -58,7 +58,7 @@ export class AuthService {
       'verification-code',
       { code: verificationCode },
     );
-
+      //create buyer wallet
     return createdUser.save();
   }
   async login(

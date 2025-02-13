@@ -1,33 +1,47 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, ValidationPipe } from '@nestjs/common';
 import { WalletService } from './wallet.service';
 import { CreateWalletDto } from './dto/create-wallet.dto';
 import { UpdateWalletDto } from './dto/update-wallet.dto';
+import { CreditWalletDto } from './dto/credit-wallet.dto';
+import { ApiOperation } from '@nestjs/swagger';
 
-@Controller('wallet')
+@Controller('api/v1/')
 export class WalletController {
   constructor(private readonly walletService: WalletService) {}
-
-  @Post()
-  create(@Body() createWalletDto: CreateWalletDto) {
+  
+  @ApiOperation({ summary: 'Create a user wallet' })
+  @Post('wallet/create')
+  create(@Body(new ValidationPipe()) createWalletDto: CreateWalletDto) {
     return this.walletService.create(createWalletDto);
   }
 
-  @Get()
+
+  @ApiOperation({ summary: 'Create a user wallet' })
+  @Post('creditWallet')
+  creditWallet(@Body(new ValidationPipe()) creditWallet: CreditWalletDto) {
+    return this.walletService.creditWallet(creditWallet);
+  }
+
+  @ApiOperation({ summary: 'Get all wallet' })
+  @Get('allWallet')
   findAll() {
     return this.walletService.findAll();
   }
 
-  @Get(':id')
+  @ApiOperation({ summary: 'get wallet by id' })
+  @Get('wallet:id')
   findOne(@Param('id') id: string) {
-    return this.walletService.findOne(+id);
+    return this.walletService.findOne(id);
   }
 
-  @Patch(':id')
+  @ApiOperation({ summary: 'update a wallet' })
+  @Patch('wallet:id')
   update(@Param('id') id: string, @Body() updateWalletDto: UpdateWalletDto) {
     return this.walletService.update(+id, updateWalletDto);
   }
 
-  @Delete(':id')
+  @ApiOperation({ summary: 'delete a wallet' })
+  @Delete('wallet:id')
   remove(@Param('id') id: string) {
     return this.walletService.remove(+id);
   }

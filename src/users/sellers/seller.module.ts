@@ -7,6 +7,7 @@ import { CloudinaryModule } from '../../utils/cloudinary/cloudinary.module';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AuthModule } from 'src/auth/auth.module';
+import { Sales, SaleSchema } from './sales.schema';
 
 @Module({
   imports: [
@@ -18,11 +19,14 @@ import { AuthModule } from 'src/auth/auth.module';
       }),
       inject: [ConfigService],
     }),
-    MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
+    MongooseModule.forFeature([{ name: User.name, schema: UserSchema },
+      { name: Sales.name, schema: SaleSchema }
+    ]),
     CloudinaryModule,
     AuthModule,
   ],
   controllers: [SellerController],
   providers: [SellerService],
+  exports:[SellerService]
 })
 export class SellerModule {}
