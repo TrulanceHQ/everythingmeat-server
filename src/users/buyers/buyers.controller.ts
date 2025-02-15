@@ -60,8 +60,8 @@ export class BuyersController {
   }
 
   @Roles('buyer')
-  @Post('orders')
-  @ApiOperation({ summary: 'Place a new Order' })
+  @Get('orders/user/:buyerId')
+  @ApiOperation({ summary: 'Checkout' })
   createOrder(@Param('buyerId') buyerId: string) {
     return this.buyersService.createOrder(buyerId);
   }

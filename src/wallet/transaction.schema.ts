@@ -11,7 +11,7 @@ export class Transaction extends Document {
   amount:number;
     @Prop({ type: Types.ObjectId, ref: 'User', required: true })
     user:User;
-    @Prop({ type: Types.ObjectId, ref: 'Order', required: true })
+    @Prop({ type: Types.ObjectId, ref: 'Order' })
     order:Order;
     
 }

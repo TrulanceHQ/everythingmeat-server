@@ -118,7 +118,11 @@ export class BuyersService {
       try {
         const soldOut:any[] = [];
         let totalAmount:number = 0; 
-        const usersCart = await this.cartModel.find({status:true,buyer:buyerId}).populate("prod")
+        console.log(buyerId)
+        const buyer = await this.userModel.findOne({_id:buyerId})
+        console.log(buyer)
+        const usersCart = await this.cartModel.find({status:true,buyer:buyer._id}).populate("prod")
+        console.log(usersCart)
         if(usersCart.length >0){
           usersCart.forEach((cart)=>{
             if(cart.slot > cart.prod.totalSlots) soldOut.push(cart.prod)
@@ -130,7 +134,7 @@ export class BuyersService {
             return  { message:'Following Items slot has been filled up/Reduce  the number slot Or pick slot for other items',status:200, data:soldOut}
           }
           //check if buyer has a wallet
-          const wallet = await this.walletService.findOne(buyerId)
+          const wallet = await this.walletService.findUserWallet(buyerId)
           if(!wallet) throw new BadRequestException("Buyer has no wallet, please create one")
             if (wallet.balance < totalAmount) throw new BadRequestException("Insufficient Fund")
           await  this.saveOrder(buyerId)
@@ -171,7 +175,7 @@ async updateProductAfterPaymnent(id:string){
       //get buyer
       const buyer = await this.userModel.findOne({_id:id})
       //get users carts
-    const usersCart = await this.cartModel.find({status:true,buyer:buyer}).populate("prod")
+    const usersCart = await this.cartModel.find({status:true,buyer:buyer._id}).populate("prod")
       for (let index = 0; index < usersCart.length; index++) {
         const userCart = usersCart[index]
         const slotsLeft =  userCart.prod.totalSlots - userCart.slot
@@ -181,8 +185,8 @@ async updateProductAfterPaymnent(id:string){
        //update product slot size
         await this.prodModel.updateOne({
           _id: userCart.prod._id,
-          totalSlots:slotsLeft,
-        });
+        
+        },{ totalSlots:slotsLeft});
         //create order
          const newOrder = new this.orderModel({grossAmount:grossAmount,slot:slot,prod:prod,buyer:buyer._id})
        const savedOrder =  await newOrder.save()
@@ -197,8 +201,8 @@ async updateProductAfterPaymnent(id:string){
         //update cart or empty cart
         await userCart.updateOne({
           _id: userCart._id,
-          status: false,
-        });
+       
+        },{   status: false,});
       }
     } catch (error) {
       console.log(error)

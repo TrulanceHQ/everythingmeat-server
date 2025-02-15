@@ -70,7 +70,7 @@ export class SellerService {
 async createSale(cart: Cart, orderId:any){
 try {
   //create sales for seller
-const newSales  =  new this.salesModel({seller:cart.prod.sellerId,orderId:orderId})
+const newSales  =  new this.salesModel({seller:cart.prod.sellerId,orderId:orderId,payment:"PENDING"})
 // save sells for seller
 return await newSales.save()
 } catch (error) {
