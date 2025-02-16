@@ -7,24 +7,23 @@ export class Order extends Document {
 
     @Prop([{
         type:mongoose.Schema.Types.ObjectId,
-        ref:'Product',
+        ref:'OrderDetail',
         required:true
     }])
-
-   items:[mongoose.Schema.Types.ObjectId];
+   orderDetails:[mongoose.Schema.Types.ObjectId];
    @Prop([{
     type:mongoose.Schema.Types.ObjectId,
     ref:'User',
     required:true
 }])
    buyer:mongoose.Schema.Types.ObjectId;
-
+   delivery:string
    @Prop(
     {
-        default:false,
+        default:'Pending',
     }
    )
-   status:boolean;
+   status:string;
 
 }
 export const OrderSchema = SchemaFactory.createForClass(Order);

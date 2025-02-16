@@ -4,7 +4,7 @@ import {
   InternalServerErrorException,
 } from '@nestjs/common';
 import { UpdateBuyerDto } from './dto/update-buyer.dto';
-import { Order } from './order.schema';
+import { Order, OrderSchema } from './order.schema';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { CreateOrderDto } from './dto/create-order.dto';
@@ -12,6 +12,7 @@ import { User } from 'src/auth/schema/user.schema';
 import { CreateCartDto } from './dto/create-cart.dto';
 import { Cart } from './cart.schema';
 import { Product } from 'src/products/schema/product.schema';
+import { OrderDetail } from './order.Detail.schema';
 
 @Injectable()
 export class BuyersService {
@@ -20,6 +21,8 @@ export class BuyersService {
     @InjectModel(User.name) private userModel: Model<User>,
     @InjectModel(Cart.name) private cartModel: Model<Cart>,
     @InjectModel(Product.name) private prodModel: Model<Product>,
+    @InjectModel(OrderDetail.name) private orderDetailModel: Model<OrderDetail>,
+
   ) {}
   async findAll() {
     try {
@@ -95,27 +98,40 @@ export class BuyersService {
     }
 
     async UpdateCartQty(cartId:string,qty:number) {
+      try {
+        console.log('updating... cart ......')
         const cart =  await  this.cartModel.findOne({_id:cartId})
         if(!cart) throw new BadRequestException("Cart does not exist")
-      return this.cartModel.updateOne({_id:cartId,slot:qty});
+      const resp =    await this.cartModel.updateOne({_id:cartId},{slot:qty});
+      return resp
+      } catch (error) {
+        console.log(error)
+        throw new InternalServerErrorException(error.message)
+      }
     }
   
-    async createOrder(buyerId:string):Promise<any> {
+    async createOrder(buyerId:any):Promise<any> {
       try {
         const soldOut:any[] = [];
         let totalAmount:number = 0; 
-        const usersCart = await this.cartModel.find({status:true,_id:buyerId}).populate("Product")
-            usersCart.forEach((cart)=>{
-              if(cart.slot > cart.prod.totalSlots) soldOut.push(cart.prod)
-             else{
-              totalAmount += cart.slot*cart.prod.productPrice
-            } 
-            })
-            if(soldOut.length >0 ) {
-              return  { message:'Following Items slot has been filled up/Reduce  the number slot Or pick slot for other items',status:200, data:soldOut}
-            }
-            // call payment service
-      return "Processing Order";
+        const usersCart = await this.cartModel.find({status:true,buyer:buyerId}).populate("prod")
+        if(usersCart.length >0){
+          usersCart.forEach((cart)=>{
+            if(cart.slot > cart.prod.totalSlots) soldOut.push(cart.prod)
+           else{
+            totalAmount += cart.slot*cart.prod.productPrice
+          } 
+          })
+          if(soldOut.length >0 ) {
+            return  { message:'Following Items slot has been filled up/Reduce  the number slot Or pick slot for other items',status:200, data:soldOut}
+          }
+          await  this.saveOrder(buyerId)
+          return "Success";
+        }
+        else throw new BadRequestException('Cart is empty')
+           
+
+   
       } catch (error) {
         if(error.status < 500) throw new BadRequestException(error.message) 
         throw new  InternalServerErrorException(error.message)
@@ -128,10 +144,8 @@ checkSlotAvailable(  prod:Product,
   slot:number):boolean{
  return prod.totalSlots > slot ?true:false
 }
-
-  async updateProductAfterPaymnent(id: string) {
-    const usersCart = await this.cartModel
-      .find({ status: true, _id: id })
+async updateProductAfterPaymnent(id:string){
+  const usersCart = await this.cartModel.find({status:true,_id:id}).populate("Product")
       .populate('Product');
     for (let index = 0; index < usersCart.length; index++) {
       await this.prodModel.updateOne({
@@ -144,4 +158,36 @@ checkSlotAvailable(  prod:Product,
       });
     }
   }
+  async saveOrder(id:string){
+    const orderDetails:any[] = []
+    const usersCart = await this.cartModel.find({status:true,buyer:id}).populate("prod")
+
+      for (let index = 0; index < usersCart.length; index++) {
+        await this.prodModel.updateOne({
+          _id: usersCart[index].prod._id,
+          totalSlots: usersCart[index].prod.totalSlots - usersCart[index].slot,
+        });
+         const orderDetail = new this.orderDetailModel({grossAmount:usersCart[index].slot*usersCart[index].prod.productPrice,slot:usersCart[index].slot,prod:usersCart[index].prod._id})
+       const savedOrder=  await orderDetail.save()
+       orderDetails.push(savedOrder._id)
+     
+        await usersCart[index].updateOne({
+          _id: usersCart[index]._id,
+          status: false,
+        });
+      }
+      const order = new this.orderModel({buyer:id,orderDetails:orderDetails,status:'Pending'})
+      await order.save()
+
+    }
+
+
+
+
+
+
+
+// async saveOrder(){
+
+// }
 }

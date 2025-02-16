@@ -17,6 +17,7 @@ import { SellerModule } from './users/sellers/seller.module';
 import { AdminModule } from './users/admin/admin.module';
 import { ProductModule } from './products/product.module';
 import { EmailUtil } from './utils/email/email.util';
+import { PaymentModule } from './payment/payment.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -72,6 +73,7 @@ import { EmailUtil } from './utils/email/email.util';
     SellerModule,
     AdminModule,
     ProductModule,
+    PaymentModule,
   ],
   controllers: [AppController],
   providers: [AppService, EmailUtil],
