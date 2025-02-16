@@ -2,6 +2,7 @@ import {
   BadRequestException,
   Injectable,
   InternalServerErrorException,
+  NotFoundException,
 } from '@nestjs/common';
 import { UpdateBuyerDto } from './dto/update-buyer.dto';
 import { Order, OrderSchema } from './order.schema';
@@ -12,7 +13,8 @@ import { User } from 'src/auth/schema/user.schema';
 import { CreateCartDto } from './dto/create-cart.dto';
 import { Cart } from './cart.schema';
 import { Product } from 'src/products/schema/product.schema';
-import { OrderDetail } from './order.Detail.schema';
+import { WalletService } from 'src/wallet/wallet.service';
+import { SellerService } from '../sellers/seller.service';
 
 @Injectable()
 export class BuyersService {
@@ -21,10 +23,12 @@ export class BuyersService {
     @InjectModel(User.name) private userModel: Model<User>,
     @InjectModel(Cart.name) private cartModel: Model<Cart>,
     @InjectModel(Product.name) private prodModel: Model<Product>,
-    @InjectModel(OrderDetail.name) private orderDetailModel: Model<OrderDetail>,
+  private readonly walletService:WalletService,
+  private readonly   sellerService:SellerService
 
   ) {}
   async findAll() {
+   
     try {
       return await this.orderModel.find();
     } catch (error) {
@@ -114,7 +118,11 @@ export class BuyersService {
       try {
         const soldOut:any[] = [];
         let totalAmount:number = 0; 
-        const usersCart = await this.cartModel.find({status:true,buyer:buyerId}).populate("prod")
+        console.log(buyerId)
+        const buyer = await this.userModel.findOne({_id:buyerId})
+        console.log(buyer)
+        const usersCart = await this.cartModel.find({status:true,buyer:buyer._id}).populate("prod")
+        console.log(usersCart)
         if(usersCart.length >0){
           usersCart.forEach((cart)=>{
             if(cart.slot > cart.prod.totalSlots) soldOut.push(cart.prod)
@@ -125,6 +133,10 @@ export class BuyersService {
           if(soldOut.length >0 ) {
             return  { message:'Following Items slot has been filled up/Reduce  the number slot Or pick slot for other items',status:200, data:soldOut}
           }
+          //check if buyer has a wallet
+          const wallet = await this.walletService.findUserWallet(buyerId)
+          if(!wallet) throw new BadRequestException("Buyer has no wallet, please create one")
+            if (wallet.balance < totalAmount) throw new BadRequestException("Insufficient Fund")
           await  this.saveOrder(buyerId)
           return "Success";
         }
@@ -159,35 +171,44 @@ async updateProductAfterPaymnent(id:string){
     }
   }
   async saveOrder(id:string){
-    const orderDetails:any[] = []
-    const usersCart = await this.cartModel.find({status:true,buyer:id}).populate("prod")
-
+    try {
+      //get buyer
+      const buyer = await this.userModel.findOne({_id:id})
+      //get users carts
+    const usersCart = await this.cartModel.find({status:true,buyer:buyer._id}).populate("prod")
       for (let index = 0; index < usersCart.length; index++) {
+        const userCart = usersCart[index]
+        const slotsLeft =  userCart.prod.totalSlots - userCart.slot
+       const grossAmount= userCart.slot*userCart.prod.productPrice
+       const slot = userCart.slot
+       const prod = userCart.prod._id
+       //update product slot size
         await this.prodModel.updateOne({
-          _id: usersCart[index].prod._id,
-          totalSlots: usersCart[index].prod.totalSlots - usersCart[index].slot,
-        });
-         const orderDetail = new this.orderDetailModel({grossAmount:usersCart[index].slot*usersCart[index].prod.productPrice,slot:usersCart[index].slot,prod:usersCart[index].prod._id})
-       const savedOrder=  await orderDetail.save()
-       orderDetails.push(savedOrder._id)
-     
-        await usersCart[index].updateOne({
-          _id: usersCart[index]._id,
-          status: false,
-        });
+          _id: userCart.prod._id,
+        
+        },{ totalSlots:slotsLeft});
+        //create order
+         const newOrder = new this.orderModel({grossAmount:grossAmount,slot:slot,prod:prod,buyer:buyer._id})
+       const savedOrder =  await newOrder.save()
+         //acct sales for vendor
+         await this.sellerService.createSale(usersCart[index],
+          savedOrder)
+          //credit truance account
+            //create truance trnsaction
+          await this.walletService.createTruanceTransaction(userCart,savedOrder)
+          //Debit buyer
+          await this.walletService.debitWallet(buyer,grossAmount,'PURCHASE',savedOrder)
+        //update cart or empty cart
+        await userCart.updateOne({
+          _id: userCart._id,
+       
+        },{   status: false,});
       }
-      const order = new this.orderModel({buyer:id,orderDetails:orderDetails,status:'Pending'})
-      await order.save()
-
+    } catch (error) {
+      console.log(error)
     }
-
-
-
-
-
-
-
-// async saveOrder(){
-
-// }
+    }
+  async performTransaction(userId:string,sellerId:string,amount:number){
+     
+  }
 }

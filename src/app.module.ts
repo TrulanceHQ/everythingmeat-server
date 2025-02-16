@@ -18,6 +18,8 @@ import { AdminModule } from './users/admin/admin.module';
 import { ProductModule } from './products/product.module';
 import { EmailUtil } from './utils/email/email.util';
 import { PaymentModule } from './payment/payment.module';
+import { WalletModule } from './wallet/wallet.module';
+
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -74,6 +76,7 @@ import { PaymentModule } from './payment/payment.module';
     AdminModule,
     ProductModule,
     PaymentModule,
+    WalletModule,
   ],
   controllers: [AppController],
   providers: [AppService, EmailUtil],

@@ -1,14 +1,17 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { User } from '../../auth/schema/user.schema';
 import { SellerDto } from './seller.dto';
 import { CloudinaryService } from '../../utils/cloudinary/cloudinary.service';
+import { Cart } from '../buyers/cart.schema';
+import { Sales, SaleSchema } from './sales.schema';
 
 @Injectable()
 export class SellerService {
   constructor(
     @InjectModel(User.name) private userModel: Model<User>,
+    @InjectModel(Sales.name) private salesModel: Model<Sales>,
     private cloudinaryService: CloudinaryService,
   ) {}
 
@@ -63,4 +66,18 @@ export class SellerService {
 
     return seller;
   }
+
+async createSale(cart: Cart, orderId:any){
+try {
+  //create sales for seller
+const newSales  =  new this.salesModel({seller:cart.prod.sellerId,orderId:orderId,payment:"PENDING"})
+// save sells for seller
+return await newSales.save()
+} catch (error) {
+  throw new InternalServerErrorException(error.message)
+}
+
+}
+
+
 }

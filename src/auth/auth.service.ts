@@ -49,16 +49,16 @@ export class AuthService {
       password: hashedPassword,
       verificationCode,
       verificationCodeExpires,
-      isVerified: false,
+      isVerified: true,
     });
 
-    await this.emailUtil.sendEmail(
-      createUserDto.emailAddress,
-      'Email Verification',
-      'verification-code',
-      { code: verificationCode },
-    );
-
+    // await this.emailUtil.sendEmail(
+    //   createUserDto.emailAddress,
+    //   'Email Verification',
+    //   'verification-code',
+    //   { code: verificationCode },
+    // );
+      //create buyer wallet
     return createdUser.save();
   }
   async login(

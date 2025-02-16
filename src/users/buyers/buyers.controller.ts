@@ -10,13 +10,7 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import {
-  ApiTags,
-  ApiBody,
-  ApiResponse,
-  ApiBearerAuth,
-  ApiOperation,
-} from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { BuyersService } from './buyers.service';
 // import { UpdateBuyerDto } from './dto/update-buyer.dto';
 import { CreateCartDto } from './dto/create-cart.dto';
@@ -60,7 +54,13 @@ export class BuyersController {
   removeCartItem(@Param('id') id: string) {
     return this.buyersService.removeItem(id);
   }
-  
+
+  @Roles('buyer')
+  @Get('orders/user/:buyerId')
+  @ApiOperation({ summary: 'Checkout' })
+  createOrder(@Param('buyerId') buyerId: string) {
+    return this.buyersService.createOrder(buyerId);
+  }
   @Roles('buyer')
   @ApiOperation({ summary: 'Get all Buyers in the Cart' })
   @Get('cart/user:carts')
@@ -72,20 +72,5 @@ export class BuyersController {
   find(@Param('userId') userId: string) {
     console.log(userId);
     return this.buyersService.getBuyerCarts(userId);
-  }  @Roles('buyer')
-  @Get("/orders/:buyerId")
-  @ApiOperation({ summary: 'Place a new Order' })
-  createOrder(@Param('buyerId') buyerId:string) {
-    return this.buyersService.createOrder(buyerId)
   }
-
-  // @Patch(':id')
-  // update(@Param('id') id: string, @Body() updateBuyerDto: UpdateBuyerDto) {
-  //   return this.buyersService.update(+id, updateBuyerDto);
-  // }
-
-  // @Delete(':id')
-  // remove(@Param('id') id: string) {
-  //   return this.buyersService.remove(+id);
-  // }
 }

@@ -27,6 +27,7 @@ import {
   ResetPasswordDto,
   UpdateUserDto,
   VerifyEmailDto,
+  //VerifyEmailDto,
 } from './auth.dto';
 import { LocalAuthGuard } from '../utils/LocalGuard/local-auth.guard';
 import { FileInterceptor } from '@nestjs/platform-express';
