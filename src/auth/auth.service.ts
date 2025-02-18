@@ -36,19 +36,19 @@ export class AuthService {
       );
     }
     const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
-    const verificationCode = Math.floor(
-      100000 + Math.random() * 900000,
-    ).toString();
-    const verificationCodeExpires = new Date();
-    verificationCodeExpires.setMinutes(
-      verificationCodeExpires.getMinutes() + 2,
-    ); // Code expires in 2 minutes
+    // const verificationCode = Math.floor(
+    //   100000 + Math.random() * 900000,
+    // ).toString();
+    // const verificationCodeExpires = new Date();
+    // verificationCodeExpires.setMinutes(
+    //   verificationCodeExpires.getMinutes() + 2,
+    // ); // Code expires in 2 minutes
 
     const createdUser = new this.userModel({
       ...createUserDto,
       password: hashedPassword,
-      verificationCode,
-      verificationCodeExpires,
+      // verificationCode,
+      // verificationCodeExpires,
       isVerified: true,
     });
 
