@@ -10,11 +10,7 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import {
-  ApiTags,
-  ApiOperation,
-  ApiBearerAuth,
-} from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { BuyersService } from './buyers.service';
 // import { UpdateBuyerDto } from './dto/update-buyer.dto';
 import { CreateCartDto } from './dto/create-cart.dto';

@@ -31,7 +31,7 @@ import { SellerModule } from '../sellers/seller.module';
     ]),
     WalletModule,
     AuthModule,
-    SellerModule
+    SellerModule,
   ],
   controllers: [BuyersController],
   providers: [BuyersService],

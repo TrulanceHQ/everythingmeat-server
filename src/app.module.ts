@@ -16,9 +16,10 @@ console.log(process.env.DEV_MONGODB_CONNECTION_URL);
 import { SellerModule } from './users/sellers/seller.module';
 import { AdminModule } from './users/admin/admin.module';
 import { ProductModule } from './products/product.module';
+import { EmailUtil } from './utils/email/email.util';
 import { PaymentModule } from './payment/payment.module';
 import { WalletModule } from './wallet/wallet.module';
-import { EmailUtil } from './utils/email/email.util';
+
 @Module({
   imports: [
     ConfigModule.forRoot({
