@@ -4,6 +4,8 @@ import { CreateWalletDto } from './dto/create-wallet.dto';
 import { UpdateWalletDto } from './dto/update-wallet.dto';
 import { CreditWalletDto } from './dto/credit-wallet.dto';
 import { ApiOperation } from '@nestjs/swagger';
+import { Order } from 'src/users/buyers/order.schema';
+import { BuyerResponseDto } from 'src/users/buyers/dto/buyer-response.dto';
 
 @Controller('api/v1/')
 export class WalletController {
@@ -21,6 +23,8 @@ export class WalletController {
   creditWallet(@Body(new ValidationPipe()) creditWallet: CreditWalletDto) {
     return this.walletService.creditWallet(creditWallet);
   }
+
+
 
   // @ApiOperation({ summary: 'Get all wallet' })
   // @Get('allWallet')

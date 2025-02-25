@@ -59,9 +59,9 @@ export class WalletService {
   const transaction=  await newTransaction.save()
   console.log( wallet)
     wallet.transactionHistory.push(transaction)
-    wallet.balance = wallet.balance+amount
+    wallet.balance = wallet.balance-amount
     //
-  return   wallet.save();
+  return   await wallet.save();
 }
 
 async createTruanceTransaction(cart:Cart,order:Order){
