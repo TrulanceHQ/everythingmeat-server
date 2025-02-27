@@ -118,11 +118,9 @@ export class BuyersService {
       try {
         const soldOut:any[] = [];
         let totalAmount:number = 0; 
-        console.log(buyerId)
         const buyer = await this.userModel.findOne({_id:buyerId})
         console.log(buyer)
         const usersCart = await this.cartModel.find({status:true,buyer:buyer._id}).populate("prod")
-        console.log(usersCart)
         if(usersCart.length >0){
           usersCart.forEach((cart)=>{
             if(cart.slot > cart.prod.totalSlots) soldOut.push(cart.prod)
@@ -134,9 +132,13 @@ export class BuyersService {
             return  { message:'Following Items slot has been filled up/Reduce  the number slot Or pick slot for other items',status:200, data:soldOut}
           }
           //check if buyer has a wallet
-          const wallet = await this.walletService.findUserWallet(buyerId)
-          if(!wallet) throw new BadRequestException("Buyer has no wallet, please create one")
-            if (wallet.balance < totalAmount) throw new BadRequestException("Insufficient Fund")
+          // const wallet = await this.walletService.findUserWallet(buyerId)
+          // if(!wallet) throw new BadRequestException("Buyer has no wallet, please create one")
+          //   if (wallet.balance < totalAmount) throw new BadRequestException("Insufficient Fund")
+
+      //amount buyer
+      
+
           await  this.saveOrder(buyerId)
           return "Success";
         }
@@ -182,11 +184,6 @@ async updateProductAfterPaymnent(id:string){
        const grossAmount= userCart.slot*userCart.prod.productPrice
        const slot = userCart.slot
        const prod = userCart.prod._id
-       //update product slot size
-        await this.prodModel.updateOne({
-          _id: userCart.prod._id,
-        
-        },{ totalSlots:slotsLeft});
         //create order
          const newOrder = new this.orderModel({grossAmount:grossAmount,slot:slot,prod:prod,buyer:buyer._id})
        const savedOrder =  await newOrder.save()
@@ -197,8 +194,17 @@ async updateProductAfterPaymnent(id:string){
             //create truance trnsaction
           await this.walletService.createTruanceTransaction(userCart,savedOrder)
           //Debit buyer
-          await this.walletService.debitWallet(buyer,grossAmount,'PURCHASE',savedOrder)
+          // await this.walletService.debitWallet(buyer,grossAmount,'PURCHASE',savedOrder)
+
+
+
+         //update product slot size
+        await this.prodModel.updateOne({
+          _id: userCart.prod._id,
+        
+        },{ totalSlots:slotsLeft});
         //update cart or empty cart
+
         await userCart.updateOne({
           _id: userCart._id,
        

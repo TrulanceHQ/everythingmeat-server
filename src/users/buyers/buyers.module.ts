@@ -11,6 +11,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AuthModule } from 'src/auth/auth.module';
 import { WalletModule } from 'src/wallet/wallet.module';
 import { SellerModule } from '../sellers/seller.module';
+import { PaymentModule } from 'src/payment/payment.module';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { SellerModule } from '../sellers/seller.module';
     WalletModule,
     AuthModule,
     SellerModule,
+    PaymentModule
   ],
   controllers: [BuyersController],
   providers: [BuyersService],
