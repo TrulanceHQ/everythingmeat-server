@@ -12,9 +12,11 @@ import { AuthModule } from 'src/auth/auth.module';
 import { WalletModule } from 'src/wallet/wallet.module';
 import { SellerModule } from '../sellers/seller.module';
 import { PaymentModule } from 'src/payment/payment.module';
+import { FlwTrans, FlwTransSchema } from 'src/payment/flwTrans.schema';
 
 @Module({
   imports: [
+    PaymentModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({
@@ -29,11 +31,11 @@ import { PaymentModule } from 'src/payment/payment.module';
       { name: Cart.name, schema: CartSchema },
       { name: User.name, schema: UserSchema },
       { name: Product.name, schema: ProductSchema },
+       { name: FlwTrans.name, schema:FlwTransSchema }
     ]),
     WalletModule,
     AuthModule,
     SellerModule,
-    PaymentModule
   ],
   controllers: [BuyersController],
   providers: [BuyersService],

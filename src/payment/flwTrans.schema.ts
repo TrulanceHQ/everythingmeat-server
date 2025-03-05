@@ -6,13 +6,14 @@ export class FlwTrans extends Document {
     @Prop()
     ref:string
    status:string;
-   @Prop([{
+   @Prop({
     type:mongoose.Schema.Types.ObjectId,
     ref:'User',
     required:true
-}])
+})
 
 buyer:User;
+@Prop()
 amount:number;
 
 }

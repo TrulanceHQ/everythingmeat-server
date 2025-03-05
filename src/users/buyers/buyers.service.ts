@@ -15,7 +15,11 @@ import { Cart } from './cart.schema';
 import { Product } from 'src/products/schema/product.schema';
 import { WalletService } from 'src/wallet/wallet.service';
 import { SellerService } from '../sellers/seller.service';
-
+import { FlWRedirectDto } from 'src/payment/dto/redirect.dto';
+import { FlwTrans } from 'src/payment/flwTrans.schema';
+import * as flw from "flutterwave-node-v3"
+import { PaymentService } from 'src/payment/payment.service';
+import { Response } from 'express';
 @Injectable()
 export class BuyersService {
   constructor(
@@ -23,6 +27,8 @@ export class BuyersService {
     @InjectModel(User.name) private userModel: Model<User>,
     @InjectModel(Cart.name) private cartModel: Model<Cart>,
     @InjectModel(Product.name) private prodModel: Model<Product>,
+    @InjectModel(FlwTrans.name) private flwModel: Model<FlwTrans>, 
+    private readonly paymentService:PaymentService,
   private readonly walletService:WalletService,
   private readonly   sellerService:SellerService
 
@@ -114,12 +120,11 @@ export class BuyersService {
       }
     }
   
-    async createOrder(buyerId:any):Promise<any> {
+    async createOrder(buyerId:any,res:Response):Promise<any> {
       try {
         const soldOut:any[] = [];
         let totalAmount:number = 0; 
         const buyer = await this.userModel.findOne({_id:buyerId})
-        console.log(buyer)
         const usersCart = await this.cartModel.find({status:true,buyer:buyer._id}).populate("prod")
         if(usersCart.length >0){
           usersCart.forEach((cart)=>{
@@ -131,6 +136,8 @@ export class BuyersService {
           if(soldOut.length >0 ) {
             return  { message:'Following Items slot has been filled up/Reduce  the number slot Or pick slot for other items',status:200, data:soldOut}
           }
+
+         await this.paymentService.create({amount:totalAmount,buyer},res)
           //check if buyer has a wallet
           // const wallet = await this.walletService.findUserWallet(buyerId)
           // if(!wallet) throw new BadRequestException("Buyer has no wallet, please create one")
@@ -139,7 +146,7 @@ export class BuyersService {
       //amount buyer
       
 
-          await  this.saveOrder(buyerId)
+      
           return "Success";
         }
         else throw new BadRequestException('Cart is empty')
@@ -172,7 +179,7 @@ async updateProductAfterPaymnent(id:string){
       });
     }
   }
-  async saveOrder(id:string){
+  async saveOrder(id:any){
     try {
       //get buyer
       const buyer = await this.userModel.findOne({_id:id})
@@ -193,12 +200,6 @@ async updateProductAfterPaymnent(id:string){
           //credit truance account
             //create truance trnsaction
           await this.walletService.createTruanceTransaction(userCart,savedOrder)
-          //Debit buyer
-          // await this.walletService.debitWallet(buyer,grossAmount,'PURCHASE',savedOrder)
-
-
-
-         //update product slot size
         await this.prodModel.updateOne({
           _id: userCart.prod._id,
         
@@ -214,7 +215,25 @@ async updateProductAfterPaymnent(id:string){
       console.log(error)
     }
     }
-  async performTransaction(userId:string,sellerId:string,amount:number){
-     
+  async paymentCallBack(flwDto:FlWRedirectDto) {
+    if (flwDto.status === 'successful') {
+      const transactionDetails = await this.flwModel.findOne({ref: flwDto.tx_ref});
+      const response = await flw.Transaction.verify({id: flwDto.transaction_id});
+      if (
+          response.data.status === "successful"
+          && response.data.amount === transactionDetails.amount
+          && response.data.currency === "NGN") {
+            await  this.saveOrder(transactionDetails.buyer._id)
+      } else {
+          // Inform the customer their payment was unsuccessful
+      }
   }
+  }
+
+
+
+
+
+
+
 }

@@ -7,17 +7,15 @@ import { FlWRedirectDto } from './dto/redirect.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { FlwTrans } from './flwTrans.schema';
 import { Model } from 'mongoose';
-import * as flw from "flutterwave-node-v3"
-import { BuyersService } from 'src/users/buyers/buyers.service';
+import { Response } from 'express';
 
 @Injectable()
 export class PaymentService {
   constructor (  @InjectModel(FlwTrans.name) private flwModel: Model<FlwTrans>,
-  private readonly buyerService:BuyersService
 ){
 
   }
- async create(createPaymentDto: CreatePaymentDto) {
+ async create(createPaymentDto: CreatePaymentDto,res:Response) {
   const tx_ref =  crypto.randomBytes(8).toString('base64')
     try {
       const response = await axios.post(
@@ -26,7 +24,7 @@ export class PaymentService {
           tx_ref,
           amount:  createPaymentDto.amount,
           currency: 'NGN',
-          redirect_url: 'https://example_company.com/success',
+          redirect_url: `https://dfe9-197-210-8-80.ngrok-free.app/api/v1/webhook`,
           customer: {
             email:  createPaymentDto.buyer.emailAddress,
             name:  `${createPaymentDto.buyer.firstName}   ${createPaymentDto.buyer.lastName}`,
@@ -40,36 +38,24 @@ export class PaymentService {
           headers: {
             Authorization: `Bearer ${process.env.FLW_SECRET_KEY}`,
             'Content-Type': 'application/json',
+            mode:'no-cors'
+             
           },
+      
         }
       );
-      const newFlwTran = new this.flwModel({buyer:createPaymentDto.buyer,amount:createPaymentDto.amount,ref:tx_ref})
-      await newFlwTran.save()
-      return  response.data
+            const newFlwTran = new this.flwModel({buyer:createPaymentDto.buyer._id,amount:createPaymentDto.amount,ref:tx_ref})
+    const resul=  await newFlwTran.save()
+      console.log(response.data.data.link)
+    return  res.redirect(response.data.data.link)
     } catch (err) {
-      console.error(err.code);
+      console.error(err);
       console.error(err.response.data);
     }
   }
 
   findAll() {
     return `This action returns all payment`;
-  }
-
-  async paymentCallBack(flwDto:FlWRedirectDto) {
-    if (flwDto.status === 'successful') {
-      const transactionDetails = await this.flwModel.findOne({ref: flwDto.tx_ref});
-      const response = await flw.Transaction.verify({id: flwDto.transaction_id});
-      if (
-          response.data.status === "successful"
-          && response.data.amount === transactionDetails.amount
-          && response.data.currency === "NGN") {
-          // Success! Confirm the customer's payment
-          await this.buyerService.createOrder(transactionDetails.buyer._id)
-      } else {
-          // Inform the customer their payment was unsuccessful
-      }
-  }
   }
 
   update(id: number, updatePaymentDto: UpdatePaymentDto) {

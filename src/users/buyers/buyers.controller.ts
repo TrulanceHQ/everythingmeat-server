@@ -9,6 +9,7 @@ import {
   ValidationPipe,
   Query,
   UseGuards,
+  Res,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { BuyersService } from './buyers.service';
@@ -18,6 +19,8 @@ import { UpdateCartDto } from './dto/update-cart.dto';
 // import { CreateOrderDto } from './create-order.dto';
 import { RolesGuard } from 'src/utils/Roles/roles.guard';
 import { Roles } from 'src/utils/Roles/roles.decorator';
+import { FlWRedirectDto } from 'src/payment/dto/redirect.dto';
+import { Response } from 'express';
 // import { BuyerResponseDto } from './dto/buyer-response.dto';
 
 @ApiTags('Buyers')
@@ -58,8 +61,8 @@ export class BuyersController {
   @Roles('buyer')
   @Get('orders/user/:buyerId')
   @ApiOperation({ summary: 'Checkout' })
-  createOrder(@Param('buyerId') buyerId: string) {
-    return this.buyersService.createOrder(buyerId);
+  createOrder(@Param('buyerId') buyerId: string,@Res() res:Response) {
+    return this.buyersService.createOrder(buyerId,res);
   }
   @Roles('buyer')
   @ApiOperation({ summary: 'Get all Buyers in the Cart' })
@@ -73,4 +76,15 @@ export class BuyersController {
     console.log(userId);
     return this.buyersService.getBuyerCarts(userId);
   }
+
+@Get('webhook')
+flwWebhook(@Query()flwDto: FlWRedirectDto){
+  console.log(flwDto)
+  this.buyersService.paymentCallBack(flwDto)
+
+}
+
+
+
+
 }
