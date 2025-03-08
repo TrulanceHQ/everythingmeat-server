@@ -21,6 +21,7 @@ import { RolesGuard } from 'src/utils/Roles/roles.guard';
 import { Roles } from 'src/utils/Roles/roles.decorator';
 import { FlWRedirectDto } from 'src/payment/dto/redirect.dto';
 import { Response } from 'express';
+import { ApiExcludeEndpoint } from '@nestjs/swagger';
 // import { BuyerResponseDto } from './dto/buyer-response.dto';
 
 @ApiTags('Buyers')
@@ -78,6 +79,7 @@ export class BuyersController {
   }
 
 @Get('webhook')
+@ApiExcludeEndpoint()
 flwWebhook(@Query()flwDto: FlWRedirectDto){
   console.log(flwDto)
   this.buyersService.paymentCallBack(flwDto)

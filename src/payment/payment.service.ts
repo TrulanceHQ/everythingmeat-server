@@ -24,7 +24,7 @@ export class PaymentService {
           tx_ref,
           amount:  createPaymentDto.amount,
           currency: 'NGN',
-          redirect_url: `https://dfe9-197-210-8-80.ngrok-free.app/api/v1/webhook`,
+          redirect_url: `https://df0b-102-88-36-54.ngrok-free.app/api/v1/webhook`,
           customer: {
             email:  createPaymentDto.buyer.emailAddress,
             name:  `${createPaymentDto.buyer.firstName}   ${createPaymentDto.buyer.lastName}`,

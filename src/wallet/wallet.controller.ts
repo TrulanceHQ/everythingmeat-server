@@ -4,9 +4,11 @@ import { CreateWalletDto } from './dto/create-wallet.dto';
 import { UpdateWalletDto } from './dto/update-wallet.dto';
 import { CreditWalletDto } from './dto/credit-wallet.dto';
 import { ApiOperation } from '@nestjs/swagger';
+import { ApiExcludeController } from '@nestjs/swagger';
 import { Order } from 'src/users/buyers/order.schema';
 import { BuyerResponseDto } from 'src/users/buyers/dto/buyer-response.dto';
 
+@ApiExcludeController()
 @Controller('api/v1/')
 export class WalletController {
   constructor(private readonly walletService: WalletService) {}
