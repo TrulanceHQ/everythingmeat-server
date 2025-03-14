@@ -24,7 +24,7 @@ export class PaymentService {
           tx_ref,
           amount:  createPaymentDto.amount,
           currency: 'NGN',
-          redirect_url: `https://df0b-102-88-36-54.ngrok-free.app/api/v1/webhook`,
+          redirect_url: `https://payment-confirmation-5mek.onrender.com`,
           customer: {
             email:  createPaymentDto.buyer.emailAddress,
             name:  `${createPaymentDto.buyer.firstName}   ${createPaymentDto.buyer.lastName}`,
@@ -47,7 +47,8 @@ export class PaymentService {
             const newFlwTran = new this.flwModel({buyer:createPaymentDto.buyer._id,amount:createPaymentDto.amount,ref:tx_ref})
     const resul=  await newFlwTran.save()
       console.log(response.data.data.link)
-    return  res.redirect(response.data.data.link)
+      // res.redirect(response.data.data.link)
+    return   res.json({"Flutter wave checkout link":response.data.data.link})
     } catch (err) {
       console.error(err);
       console.error(err.response.data);

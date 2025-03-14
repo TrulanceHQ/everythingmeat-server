@@ -10,6 +10,8 @@ import {
   Query,
   UseGuards,
   Res,
+  Req,
+  InternalServerErrorException,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { BuyersService } from './buyers.service';
@@ -20,7 +22,7 @@ import { UpdateCartDto } from './dto/update-cart.dto';
 import { RolesGuard } from 'src/utils/Roles/roles.guard';
 import { Roles } from 'src/utils/Roles/roles.decorator';
 import { FlWRedirectDto } from 'src/payment/dto/redirect.dto';
-import { Response } from 'express';
+import { Request, Response } from 'express';
 import { ApiExcludeEndpoint } from '@nestjs/swagger';
 // import { BuyerResponseDto } from './dto/buyer-response.dto';
 
@@ -59,7 +61,7 @@ export class BuyersController {
     return this.buyersService.removeItem(id);
   }
 
-  @Roles('buyer')
+  // @Roles('buyer')
   @Get('orders/user/:buyerId')
   @ApiOperation({ summary: 'Checkout' })
   createOrder(@Param('buyerId') buyerId: string,@Res() res:Response) {
@@ -79,11 +81,24 @@ export class BuyersController {
   }
 
 @Get('webhook')
-@ApiExcludeEndpoint()
-flwWebhook(@Query()flwDto: FlWRedirectDto){
-  console.log(flwDto)
-  this.buyersService.paymentCallBack(flwDto)
-
+// @ApiExcludeEndpoint()
+async flwWebhook(@Req() req:Request){
+  const {
+    transaction_id,
+    status,
+    tx_ref
+  } = req.query
+try {
+ const resp = await this.buyersService.paymentCallBack({
+    transaction_id,
+    status,
+    tx_ref
+  })
+  console.log(resp+",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,!!!!.............")
+   return "success"
+} catch (error) {
+  throw new InternalServerErrorException(error.message)
+}
 }
 
 

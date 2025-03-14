@@ -15,6 +15,10 @@ export class FlwTrans extends Document {
 buyer:User;
 @Prop()
 amount:number;
+@Prop({
+    default:true
+})
+isActive:boolean
 
 }
 export const FlwTransSchema = SchemaFactory.createForClass(FlwTrans);
