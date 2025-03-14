@@ -8,7 +8,7 @@ import { ApiExcludeController } from '@nestjs/swagger';
 import { Order } from 'src/users/buyers/order.schema';
 import { BuyerResponseDto } from 'src/users/buyers/dto/buyer-response.dto';
 
-@ApiExcludeController()
+@ApiExcludeController(  )
 @Controller('api/v1/')
 export class WalletController {
   constructor(private readonly walletService: WalletService) {}

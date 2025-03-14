@@ -17,11 +17,13 @@ import { WalletService } from 'src/wallet/wallet.service';
 import { SellerService } from '../sellers/seller.service';
 import { FlWRedirectDto } from 'src/payment/dto/redirect.dto';
 import { FlwTrans } from 'src/payment/flwTrans.schema';
-import * as flw from "flutterwave-node-v3"
+const Flutterwave = require('flutterwave-node-v3');
 import { PaymentService } from 'src/payment/payment.service';
+// const flw = require("flutterwave-node-v3")
 import { Response } from 'express';
 @Injectable()
 export class BuyersService {
+  private flw: any;
   constructor(
     @InjectModel(Order.name) private orderModel: Model<Order>,
     @InjectModel(User.name) private userModel: Model<User>,
@@ -32,7 +34,9 @@ export class BuyersService {
   private readonly walletService:WalletService,
   private readonly   sellerService:SellerService
 
-  ) {}
+  ) {
+    this.flw = new Flutterwave(process.env.FLW_PUBLIC_KEY, process.env.FLW_SECRET_KEY);
+  }
   async findAll() {
    
     try {
@@ -179,11 +183,13 @@ async updateProductAfterPaymnent(id:string){
       });
     }
   }
-  async saveOrder(id:any){
+  async saveOrder(transDetail:FlwTrans){
     try {
       //get buyer
-      const buyer = await this.userModel.findOne({_id:id})
+      console.log('Checking if buyer exit.......')
+      const buyer = await this.userModel.findOne({_id:transDetail.buyer._id})
       //get users carts
+      console.log("..getting buyer's carts ...............")
     const usersCart = await this.cartModel.find({status:true,buyer:buyer._id}).populate("prod")
       for (let index = 0; index < usersCart.length; index++) {
         const userCart = usersCart[index]
@@ -192,42 +198,68 @@ async updateProductAfterPaymnent(id:string){
        const slot = userCart.slot
        const prod = userCart.prod._id
         //create order
+        console.log('creating new user order..................')
          const newOrder = new this.orderModel({grossAmount:grossAmount,slot:slot,prod:prod,buyer:buyer._id})
        const savedOrder =  await newOrder.save()
          //acct sales for vendor
-         await this.sellerService.createSale(usersCart[index],
+         console.log('create sales account for vendor..................')
+      const salesAcct=   await this.sellerService.createSale(usersCart[index],
           savedOrder)
           //credit truance account
             //create truance trnsaction
-          await this.walletService.createTruanceTransaction(userCart,savedOrder)
-        await this.prodModel.updateOne({
+            console.log('crediting tuance wallet..................')     
+    await this.walletService.createTruanceTransaction(userCart,savedOrder)
+    console.log("updating prod sales..............................")
+     const prodU=   await this.prodModel.updateOne({
           _id: userCart.prod._id,
         
         },{ totalSlots:slotsLeft});
         //update cart or empty cart
-
-        await userCart.updateOne({
+        console.log("updating user cart..............................")
+     const upCart=   await userCart.updateOne({
           _id: userCart._id,
        
         },{   status: false,});
       }
+      console.log("..updating transactionza")
+      await this.flwModel.updateOne({ref:transDetail.ref},{isActive:false})
+      return "Success"
     } catch (error) {
       console.log(error)
+         throw new InternalServerErrorException(error.message)
     }
     }
-  async paymentCallBack(flwDto:FlWRedirectDto) {
-    if (flwDto.status === 'successful') {
+  async paymentCallBack(flwDto:any) {
+    let res = ""
+    console.log("..checking if payment is completed or successfull")
+    if (flwDto.status =='completed') {
+      console.log(".. payment is completed or successfull")
       const transactionDetails = await this.flwModel.findOne({ref: flwDto.tx_ref});
-      const response = await flw.Transaction.verify({id: flwDto.transaction_id});
+      console.info("check if the tx_ref is used")
+      if(!transactionDetails?.isActive){
+        console.log('tx_ref has been used...........')
+        throw new BadRequestException('used tx_ref...............')
+      }
+      console.log("verifying transaction.......................")
+      const response = await this.flw.Transaction.verify({id: flwDto.transaction_id});
+      console.log(response)
       if (
           response.data.status === "successful"
           && response.data.amount === transactionDetails.amount
           && response.data.currency === "NGN") {
-            await  this.saveOrder(transactionDetails.buyer._id)
+            console.info("Saving order..................")
+            console.log(transactionDetails)
+          const resp =  await  this.saveOrder(transactionDetails)
+               console.log(resp)
+            res= resp
       } else {
+        console.log("not successfull")
+        throw new BadRequestException('Payment failed')
+    
           // Inform the customer their payment was unsuccessful
       }
   }
+  return res;
   }
 
 
