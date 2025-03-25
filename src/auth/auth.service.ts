@@ -125,7 +125,7 @@ export class AuthService {
       "Reset Your Password",
       "reset-password",
       {
-        resetLink: `${process.env.APP_URL}/reset-password?code=${resetCode}`,
+        resetLink: `${process.env.FRONTEND_URL}/reset-password?code=${resetCode}`,
       },
     );
 
