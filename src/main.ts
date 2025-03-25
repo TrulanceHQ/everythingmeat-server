@@ -1,10 +1,10 @@
-import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+import { SwaggerModule, DocumentBuilder } from "@nestjs/swagger";
 
-import { ValidationPipe } from '@nestjs/common';
-import { NestFactory } from '@nestjs/core';
-import { AppModule } from './app.module';
-import { ConfigService } from '@nestjs/config';
-import { MongoExceptionFilter } from './../mongo-exception.filter';
+import { ValidationPipe } from "@nestjs/common";
+import { NestFactory } from "@nestjs/core";
+import { AppModule } from "./app.module";
+import { ConfigService } from "@nestjs/config";
+import { MongoExceptionFilter } from "./../mongo-exception.filter";
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -18,17 +18,17 @@ async function bootstrap() {
   app.useGlobalFilters(new MongoExceptionFilter());
   const configService = app.get(ConfigService);
 
-  const port = configService.get<number>('PORT') || 3000;
+  const port = (configService.get("PORT") as number) || 3005;
 
   const config = new DocumentBuilder()
-    .setTitle('Everything Meat')
-    .setDescription('Everything Meat API description')
-    .setVersion('1.0')
+    .setTitle("Everything Meat")
+    .setDescription("Everything Meat API description")
+    .setVersion("1.0")
     .addBearerAuth()
     .addTag('users')
     .build();
   const documentFactory = () => SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api', app, documentFactory);
+  SwaggerModule.setup("api", app, documentFactory);
 
   await app.listen(port);
 

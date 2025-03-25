@@ -51,6 +51,16 @@ export class CreateUserDto {
   readonly role: UserRole;
 }
 
+export class ResendEmailDto {
+  @ApiProperty({
+    description: 'Email address of the user',
+    example: 'testcode@gmail.com',
+  })
+  @IsEmail()
+  @IsNotEmpty()
+  readonly emailAddress: string;
+}
+
 export class LoginUserDto {
   @ApiProperty({
     description: 'Email address of the user',

@@ -4,16 +4,16 @@ import {
   UnauthorizedException,
   NotFoundException,
   BadRequestException,
-} from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
-import { JwtService } from '@nestjs/jwt';
-import { User } from './schema/user.schema';
-import { ChangePasswordDto, CreateUserDto, UpdateUserDto } from './auth.dto';
-import * as bcrypt from 'bcryptjs';
-import { isValidObjectId } from 'mongoose';
-import { EmailUtil } from 'src/utils/email/email.util';
-import { CloudinaryService } from 'src/utils/cloudinary/cloudinary.service';
+} from "@nestjs/common";
+import { InjectModel } from "@nestjs/mongoose";
+import { Model } from "mongoose";
+import { JwtService } from "@nestjs/jwt";
+import { User } from "./schema/user.schema";
+import { ChangePasswordDto, CreateUserDto, UpdateUserDto } from "./auth.dto";
+import * as bcrypt from "bcryptjs";
+import { isValidObjectId } from "mongoose";
+import { EmailUtil } from "src/utils/email/email-service";
+import { CloudinaryService } from "src/utils/cloudinary/cloudinary.service";
 export interface LoginResponse {
   accessToken: string;
   user: User;
@@ -26,48 +26,52 @@ export class AuthService {
     private jwtService: JwtService,
     private emailUtil: EmailUtil,
   ) {}
+
   async create(createUserDto: CreateUserDto): Promise<User> {
     const existingUser = await this.userModel
       .findOne({ emailAddress: createUserDto.emailAddress })
       .exec();
     if (existingUser) {
       throw new ConflictException(
-        'Email address has been used by another customer',
+        "Email address has been used by another customer",
       );
     }
     const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
-    // const verificationCode = Math.floor(
-    //   100000 + Math.random() * 900000,
-    // ).toString();
-    // const verificationCodeExpires = new Date();
-    // verificationCodeExpires.setMinutes(
-    //   verificationCodeExpires.getMinutes() + 2,
-    // ); // Code expires in 2 minutes
+    const verificationCode = Math.floor(
+      100000 + Math.random() * 900000,
+    ).toString();
+    const verificationCodeExpires = new Date();
+    verificationCodeExpires.setMinutes(
+      verificationCodeExpires.getMinutes() + 10,
+    ); // Code expires in 2 minutes
 
     const createdUser = new this.userModel({
       ...createUserDto,
       password: hashedPassword,
-      // verificationCode,
-      // verificationCodeExpires,
-      isVerified: true,
+      verificationCode,
+      verificationCodeExpires,
+      isVerified: false,
     });
 
-    // await this.emailUtil.sendEmail(
-    //   createUserDto.emailAddress,
-    //   'Email Verification',
-    //   'verification-code',
-    //   { code: verificationCode },
-    // );
-      //create buyer wallet
+    await this.emailUtil.sendEmail(
+      createUserDto.emailAddress,
+      "Verify Your Email",
+      "verification-code",
+      {
+        code: verificationCode,
+      },
+    );
+
     return createdUser.save();
   }
+
   async login(
     emailAddress: string,
     password: string,
   ): Promise<LoginResponse | null> {
     const user = await this.userModel.findOne({ emailAddress }).exec();
     if (!user.isVerified) {
-      throw new UnauthorizedException('Email not verified');
+      throw new UnauthorizedException("Email not verified");
     }
     if (user && (await bcrypt.compare(password, user.password))) {
       // Generate JWT token
@@ -79,18 +83,19 @@ export class AuthService {
       const accessToken = this.jwtService.sign(payload);
       return { accessToken, user };
     }
-    throw new UnauthorizedException('Username or Password Incorrect');
+    throw new UnauthorizedException("Username or Password Incorrect");
   }
+
   async verifyEmail(emailAddress: string, code: string): Promise<void> {
     const user = await this.userModel.findOne({ emailAddress }).exec();
     if (!user) {
-      throw new NotFoundException('User not found');
+      throw new NotFoundException("User not found");
     }
     if (
       user.verificationCode !== code ||
       user.verificationCodeExpires < new Date()
     ) {
-      throw new BadRequestException('Invalid or expired verification code');
+      throw new BadRequestException("Invalid or expired verification code");
     }
     user.isVerified = true;
     user.isActive = true;
@@ -98,30 +103,35 @@ export class AuthService {
     user.verificationCodeExpires = undefined;
     await user.save();
   }
+
   async findAll(): Promise<User[]> {
     return this.userModel.find().exec();
   }
+
   async forgotPassword(emailAddress: string): Promise<void> {
     const user = await this.userModel.findOne({ emailAddress }).exec();
     if (!user) {
-      throw new NotFoundException('User not found');
+      throw new NotFoundException("User not found");
     }
     const resetCode = Math.floor(100000 + Math.random() * 900000).toString();
     const resetCodeExpires = new Date();
-    resetCodeExpires.setMinutes(resetCodeExpires.getMinutes() + 2);
+    resetCodeExpires.setMinutes(resetCodeExpires.getMinutes() + 10);
     user.resetCode = resetCode;
     user.resetCodeExpires = resetCodeExpires;
     await user.save();
 
     await this.emailUtil.sendEmail(
       emailAddress,
-      'Reset Password',
-      'reset-password',
-      { code: resetCode },
+      "Reset Your Password",
+      "reset-password",
+      {
+        resetLink: `${process.env.APP_URL}/reset-password?code=${resetCode}`,
+      },
     );
 
     return;
   }
+
   async resetPassword(
     emailAddress: string,
     code: string,
@@ -129,16 +139,17 @@ export class AuthService {
   ): Promise<void> {
     const user = await this.userModel.findOne({ emailAddress }).exec();
     if (!user) {
-      throw new NotFoundException('User not found');
+      throw new NotFoundException("User not found");
     }
     if (user.resetCode !== code || user.resetCodeExpires < new Date()) {
-      throw new BadRequestException('Invalid or expired reset code');
+      throw new BadRequestException("Invalid or expired reset code");
     }
     user.password = await bcrypt.hash(newPassword, 10);
     user.resetCode = undefined;
     user.resetCodeExpires = undefined;
     await user.save();
   }
+
   async findUsersByRole(
     role: string,
     page: number,
@@ -149,54 +160,59 @@ export class AuthService {
     const query = { role, ...filter };
     return this.userModel.find(query).skip(skip).limit(limit).exec();
   }
+
   async findUserById(id: string): Promise<User> {
     if (!isValidObjectId(id)) {
-      throw new BadRequestException('Invalid user ID format');
+      throw new BadRequestException("Invalid user ID format");
     }
     const user = await this.userModel.findById(id).exec();
     if (!user) {
-      throw new NotFoundException('User not found');
+      throw new NotFoundException("User not found");
     }
     return user;
   }
+
   async updateUserStatus(id: string, isActive: boolean): Promise<User> {
     if (!isValidObjectId(id)) {
-      throw new BadRequestException('Invalid user ID format');
+      throw new BadRequestException("Invalid user ID format");
     }
     const user = await this.userModel
       .findByIdAndUpdate(id, { isActive }, { new: true })
       .exec();
     if (!user) {
-      throw new NotFoundException('User not found');
+      throw new NotFoundException("User not found");
     }
     return user;
   }
+
   async deleteUser(id: string): Promise<void> {
     if (!isValidObjectId(id)) {
-      throw new BadRequestException('Invalid user ID format');
+      throw new BadRequestException("Invalid user ID format");
     }
     const user = await this.userModel.findByIdAndDelete(id).exec();
     if (!user) {
-      throw new NotFoundException('User not found');
+      throw new NotFoundException("User not found");
     }
   }
+
   async countUsersByRole(role: string): Promise<number> {
     return this.userModel.countDocuments({ role: role }).exec();
   }
+
   async updateUser(
     id: string,
     UpdateUserDto: UpdateUserDto,
     file?: Express.Multer.File,
   ): Promise<{ message: string; user: User }> {
     if (file) {
-      const imageUrl = await this.cloudinaryService.uploadImage(file, 'users');
+      const imageUrl = await this.cloudinaryService.uploadImage(file, "users");
       UpdateUserDto.image = imageUrl;
     }
     // Filter out undefined, null, or empty values
     const filteredUpdates = Object.fromEntries(
       Object.entries(UpdateUserDto).filter(
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        ([_, v]) => v !== undefined && v !== '',
+        ([_, v]) => v !== undefined && v !== "",
       ),
     );
 
@@ -207,9 +223,9 @@ export class AuthService {
     );
 
     if (!updatedUser) {
-      throw new NotFoundException('User not found');
+      throw new NotFoundException("User not found");
     }
-    return { message: 'User updated successfully', user: updatedUser };
+    return { message: "User updated successfully", user: updatedUser };
   }
 
   async updatePassword(
@@ -218,13 +234,48 @@ export class AuthService {
   ): Promise<{ message: string }> {
     const user = await this.userModel.findById(id).exec();
     if (!user) {
-      throw new NotFoundException('User not found');
+      throw new NotFoundException("User not found");
     }
     if (!(await bcrypt.compare(changePasswordDto.oldPassword, user.password))) {
-      throw new BadRequestException('Old password is incorrect');
+      throw new BadRequestException("Old password is incorrect");
     }
     user.password = await bcrypt.hash(changePasswordDto.newPassword, 10);
     await user.save();
-    return { message: 'Password updated successfully' };
+    return { message: "Password updated successfully" };
+  }
+
+  async resendVerificationCode(
+    emailAddress: string,
+  ): Promise<{ message: string }> {
+    const user = await this.userModel.findOne({ emailAddress }).exec();
+    if (!user) {
+      throw new NotFoundException("User not found");
+    }
+    if (user.isVerified) {
+      throw new BadRequestException("Email is already verified");
+    }
+
+    const newVerificationCode = Math.floor(
+      100000 + Math.random() * 900000,
+    ).toString();
+    const newVerificationCodeExpires = new Date();
+    newVerificationCodeExpires.setMinutes(
+      newVerificationCodeExpires.getMinutes() + 10,
+    );
+
+    user.verificationCode = newVerificationCode;
+    user.verificationCodeExpires = newVerificationCodeExpires;
+    await user.save();
+
+    await this.emailUtil.sendEmail(
+      emailAddress,
+      "Resend Verification Code",
+      "verification-code",
+      {
+        code: newVerificationCode,
+      },
+    );
+
+    return { message: "Verification code resent successfully" };
   }
 }
