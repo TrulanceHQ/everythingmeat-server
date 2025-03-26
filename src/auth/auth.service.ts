@@ -227,4 +227,35 @@ export class AuthService {
     await user.save();
     return { message: 'Password updated successfully' };
   }
+
+  async resendVerificationCode(
+    emailAddress: string,
+  ): Promise<{ message: string }> {
+    const user = await this.userModel.findOne({ emailAddress }).exec();
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    if (user.isVerified) {
+      throw new BadRequestException('User is already verified');
+    }
+    const verificationCode = Math.floor(
+      100000 + Math.random() * 900000,
+    ).toString();
+    const verificationCodeExpires = new Date();
+    verificationCodeExpires.setMinutes(
+      verificationCodeExpires.getMinutes() + 2,
+    );
+    user.verificationCode = verificationCode;
+    user.verificationCodeExpires = verificationCodeExpires;
+    await user.save();
+
+    await this.emailUtil.sendEmail(
+      emailAddress,
+      'Email Verification',
+      'verification-code',
+      { code: verificationCode },
+    );
+
+    return { message: 'Verification code resent successfully' };
+  }
 }

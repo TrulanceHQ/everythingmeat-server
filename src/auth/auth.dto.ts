@@ -227,3 +227,12 @@ export class ChangePasswordDto {
   })
   newPassword: string;
 }
+export class ResendVerificationCodeDto {
+  @ApiProperty({
+    description: 'Email address of the user',
+    example: 'testcode@gmail.com',
+  })
+  @IsEmail()
+  @IsNotEmpty()
+  emailAddress: string;
+}

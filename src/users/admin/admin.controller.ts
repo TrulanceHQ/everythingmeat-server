@@ -20,9 +20,11 @@ import {
   ApiQuery,
 } from '@nestjs/swagger';
 import { UpdateUserStatusDto } from 'src/auth/auth.dto';
+import { VerifiedUserGuard } from 'src/utils/verifiredUserGuard/verified-user.guard';
 
 @ApiTags('Admin (Admin only)')
 @ApiBearerAuth()
+@UseGuards(VerifiedUserGuard)
 @Controller('api/v1/admin')
 @UseGuards(RolesGuard)
 export class AdminController {
