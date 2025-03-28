@@ -289,4 +289,20 @@ export class BuyersService {
     }
     return res;
   }
+
+  async viewOrder(orderId: string) {
+    try {
+      const order = await this.orderModel
+        .findById(orderId)
+        .populate('prod', 'name price')
+        .exec();
+
+      if (!order) {
+        throw new NotFoundException('Order not found');
+      }
+      return order;
+    } catch (error) {
+      throw new InternalServerErrorException(error.message);
+    }
+  }
 }

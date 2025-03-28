@@ -102,6 +102,14 @@ try {
 }
 
 
-
-
+    @ApiOperation({ summary: 'View Order' })
+    @Get('order/:id')
+    async viewOrder(@Param('id') orderId: string) {
+        return this.buyersService.viewOrder(orderId);
+    }
 }
+
+
+
+
+
