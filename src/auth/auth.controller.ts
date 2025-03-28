@@ -28,13 +28,12 @@ import {
   ResetPasswordDto,
   UpdateUserDto,
   VerifyEmailDto,
-  //VerifyEmailDto,
+  ResendEmailDto,
 } from './auth.dto';
 import { LocalAuthGuard } from '../utils/LocalGuard/local-auth.guard';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { RolesGuard } from '../utils/Roles/roles.guard';
 import { Roles } from '../utils/Roles/roles.decorator';
-import { VerifiedUserGuard } from 'src/utils/verifiredUserGuard/verified-user.guard';
 
 @ApiTags('Auth')
 @ApiBearerAuth()
@@ -49,6 +48,18 @@ export class UsersController {
   @ApiResponse({ status: 409, description: 'Conflict: Email already exists' })
   async create(@Body() userDto: CreateUserDto) {
     return this.authService.create(userDto);
+  }
+
+  @Post('/resend-verification-code')
+  @ApiOperation({ summary: 'Resend Verification Code' })
+  @ApiBody({ type: ResendEmailDto })
+  @ApiResponse({ status: 200, description: 'Verification code resent' })
+  @ApiResponse({ status: 404, description: 'User not found' })
+  @ApiResponse({ status: 409, description: 'Conflict: Email already verified' })
+  async resendVerificationCode(@Body() emailDto: ResendEmailDto) {
+    const { emailAddress } = emailDto;
+    await this.authService.resendVerificationCode(emailAddress);
+    return { message: 'Verification code resent' };
   }
 
   @Post('/verify-email')
@@ -70,24 +81,8 @@ export class UsersController {
     return { message: 'Email verified successfully' };
   }
 
-  @Post('/resend-verification-code')
-  @ApiOperation({ summary: 'Resend Verification Code' })
-  @ApiBody({ type: ResendVerificationCodeDto })
-  @ApiResponse({
-    status: 200,
-    description: 'Verification code resent successfully',
-  })
-  @ApiResponse({ status: 404, description: 'User not found' })
-  @ApiResponse({ status: 400, description: 'User is already verified' })
-  async resendVerificationCode(
-    @Body() resendVerificationCodeDto: ResendVerificationCodeDto,
-  ) {
-    const { emailAddress } = resendVerificationCodeDto;
-    return this.authService.resendVerificationCode(emailAddress);
-  }
-
   @HttpCode(200)
-  @UseGuards(LocalAuthGuard, VerifiedUserGuard)
+  @UseGuards(LocalAuthGuard)
   @Post('/login')
   @ApiOperation({ summary: 'Log in a user' })
   @ApiBody({ type: LoginUserDto })
@@ -101,7 +96,6 @@ export class UsersController {
   }
 
   @Roles('admin', 'seller', 'buyer')
-  @UseGuards(VerifiedUserGuard)
   @Patch('/update-user/:id')
   @UseInterceptors(FileInterceptor('image'))
   @ApiOperation({ summary: 'Update user details' })
@@ -120,7 +114,6 @@ export class UsersController {
   }
 
   @Roles('admin', 'seller', 'buyer')
-  @UseGuards(VerifiedUserGuard)
   @Post('/forgot-password')
   @ApiOperation({ summary: 'Forgot Password' })
   @ApiBody({ type: ForgotPasswordDto })
@@ -129,11 +122,10 @@ export class UsersController {
   async forgotPassword(@Body() forgotPasswordDto: ForgotPasswordDto) {
     const { emailAddress } = forgotPasswordDto;
     await this.authService.forgotPassword(emailAddress);
-    return { message: 'Reset code sent to email' };
+    return { message: 'Check your registered email fro reset link' };
   }
 
   @Roles('admin', 'seller', 'buyer')
-  @UseGuards(VerifiedUserGuard)
   @Post('/reset-password')
   @ApiOperation({ summary: 'Reset Password' })
   @ApiBody({ type: ResetPasswordDto })
@@ -147,7 +139,6 @@ export class UsersController {
   }
 
   @Roles('admin', 'seller', 'buyer')
-  @UseGuards(VerifiedUserGuard)
   @Patch('/change-password/:id')
   @ApiOperation({ summary: 'Change user password' })
   @ApiBody({ type: ChangePasswordDto })
@@ -164,7 +155,6 @@ export class UsersController {
     return this.authService.updatePassword(id, changePasswordDto);
   }
   @Roles('admin')
-  @UseGuards(VerifiedUserGuard)
   @Get('/user')
   @ApiOperation({ summary: 'Get all users (Admin only)' })
   @ApiResponse({

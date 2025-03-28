@@ -12,7 +12,7 @@ import { User } from './schema/user.schema';
 import { ChangePasswordDto, CreateUserDto, UpdateUserDto } from './auth.dto';
 import * as bcrypt from 'bcryptjs';
 import { isValidObjectId } from 'mongoose';
-import { EmailUtil } from 'src/utils/email/email.util';
+import { EmailUtil } from 'src/utils/email/email-service';
 import { CloudinaryService } from 'src/utils/cloudinary/cloudinary.service';
 export interface LoginResponse {
   accessToken: string;
@@ -26,6 +26,7 @@ export class AuthService {
     private jwtService: JwtService,
     private emailUtil: EmailUtil,
   ) {}
+
   async create(createUserDto: CreateUserDto): Promise<User> {
     const existingUser = await this.userModel
       .findOne({ emailAddress: createUserDto.emailAddress })
@@ -41,7 +42,7 @@ export class AuthService {
     ).toString();
     const verificationCodeExpires = new Date();
     verificationCodeExpires.setMinutes(
-      verificationCodeExpires.getMinutes() + 2,
+      verificationCodeExpires.getMinutes() + 10,
     ); // Code expires in 2 minutes
 
     const createdUser = new this.userModel({
@@ -49,18 +50,21 @@ export class AuthService {
       password: hashedPassword,
       verificationCode,
       verificationCodeExpires,
-      isVerified: true,
+      isVerified: false,
     });
 
-    // await this.emailUtil.sendEmail(
-    //   createUserDto.emailAddress,
-    //   'Email Verification',
-    //   'verification-code',
-    //   { code: verificationCode },
-    // );
-      //create buyer wallet
+    await this.emailUtil.sendEmail(
+      createUserDto.emailAddress,
+      'Verify Your Email',
+      'verification-code',
+      {
+        code: verificationCode,
+      },
+    );
+
     return createdUser.save();
   }
+
   async login(
     emailAddress: string,
     password: string,
@@ -81,6 +85,7 @@ export class AuthService {
     }
     throw new UnauthorizedException('Username or Password Incorrect');
   }
+
   async verifyEmail(emailAddress: string, code: string): Promise<void> {
     const user = await this.userModel.findOne({ emailAddress }).exec();
     if (!user) {
@@ -98,9 +103,11 @@ export class AuthService {
     user.verificationCodeExpires = undefined;
     await user.save();
   }
+
   async findAll(): Promise<User[]> {
     return this.userModel.find().exec();
   }
+
   async forgotPassword(emailAddress: string): Promise<void> {
     const user = await this.userModel.findOne({ emailAddress }).exec();
     if (!user) {
@@ -108,20 +115,23 @@ export class AuthService {
     }
     const resetCode = Math.floor(100000 + Math.random() * 900000).toString();
     const resetCodeExpires = new Date();
-    resetCodeExpires.setMinutes(resetCodeExpires.getMinutes() + 2);
+    resetCodeExpires.setMinutes(resetCodeExpires.getMinutes() + 10);
     user.resetCode = resetCode;
     user.resetCodeExpires = resetCodeExpires;
     await user.save();
 
     await this.emailUtil.sendEmail(
       emailAddress,
-      'Reset Password',
+      'Reset Your Password',
       'reset-password',
-      { code: resetCode },
+      {
+        resetLink: `${process.env.FRONTEND_URL}/reset-password?code=${resetCode}`,
+      },
     );
 
     return;
   }
+
   async resetPassword(
     emailAddress: string,
     code: string,
@@ -139,6 +149,7 @@ export class AuthService {
     user.resetCodeExpires = undefined;
     await user.save();
   }
+
   async findUsersByRole(
     role: string,
     page: number,
@@ -149,6 +160,7 @@ export class AuthService {
     const query = { role, ...filter };
     return this.userModel.find(query).skip(skip).limit(limit).exec();
   }
+
   async findUserById(id: string): Promise<User> {
     if (!isValidObjectId(id)) {
       throw new BadRequestException('Invalid user ID format');
@@ -159,6 +171,7 @@ export class AuthService {
     }
     return user;
   }
+
   async updateUserStatus(id: string, isActive: boolean): Promise<User> {
     if (!isValidObjectId(id)) {
       throw new BadRequestException('Invalid user ID format');
@@ -171,6 +184,7 @@ export class AuthService {
     }
     return user;
   }
+
   async deleteUser(id: string): Promise<void> {
     if (!isValidObjectId(id)) {
       throw new BadRequestException('Invalid user ID format');
@@ -180,9 +194,11 @@ export class AuthService {
       throw new NotFoundException('User not found');
     }
   }
+
   async countUsersByRole(role: string): Promise<number> {
     return this.userModel.countDocuments({ role: role }).exec();
   }
+
   async updateUser(
     id: string,
     UpdateUserDto: UpdateUserDto,
@@ -236,24 +252,28 @@ export class AuthService {
       throw new NotFoundException('User not found');
     }
     if (user.isVerified) {
-      throw new BadRequestException('User is already verified');
+      throw new BadRequestException('Email is already verified');
     }
-    const verificationCode = Math.floor(
+
+    const newVerificationCode = Math.floor(
       100000 + Math.random() * 900000,
     ).toString();
-    const verificationCodeExpires = new Date();
-    verificationCodeExpires.setMinutes(
-      verificationCodeExpires.getMinutes() + 2,
+    const newVerificationCodeExpires = new Date();
+    newVerificationCodeExpires.setMinutes(
+      newVerificationCodeExpires.getMinutes() + 10,
     );
-    user.verificationCode = verificationCode;
-    user.verificationCodeExpires = verificationCodeExpires;
+
+    user.verificationCode = newVerificationCode;
+    user.verificationCodeExpires = newVerificationCodeExpires;
     await user.save();
 
     await this.emailUtil.sendEmail(
       emailAddress,
-      'Email Verification',
+      'Resend Verification Code',
       'verification-code',
-      { code: verificationCode },
+      {
+        code: newVerificationCode,
+      },
     );
 
     return { message: 'Verification code resent successfully' };
