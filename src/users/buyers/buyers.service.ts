@@ -8,6 +8,7 @@ import { UpdateBuyerDto } from './dto/update-buyer.dto';
 import { Order, OrderSchema } from './order.schema';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
+import { Types } from 'mongoose';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { User } from 'src/auth/schema/user.schema';
 import { CreateCartDto } from './dto/create-cart.dto';
@@ -303,6 +304,28 @@ export class BuyersService {
       return order;
     } catch (error) {
       throw new InternalServerErrorException(error.message);
+    }
+  }
+
+  async viewAllOrders(buyerId: string) {
+    try {
+      if (!Types.ObjectId.isValid(buyerId)) {
+        throw new BadRequestException('Invalid buyer ID format');
+      }
+
+      const orders = await this.orderModel
+        .find({ buyer: buyerId })
+        .populate('prod', 'name price')
+        .exec();
+
+      if (!orders || orders.length === 0) {
+        throw new NotFoundException('No orders found for this buyer');
+      }
+
+      return orders;
+    } catch (error) {
+      console.error('Error fetching orders:', error);
+      throw new InternalServerErrorException('An unexpected error occurred');
     }
   }
 }

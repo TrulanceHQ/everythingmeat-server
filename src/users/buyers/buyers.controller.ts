@@ -12,6 +12,7 @@ import {
   Res,
   Req,
   InternalServerErrorException,
+  NotFoundException
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { BuyersService } from './buyers.service';
@@ -24,6 +25,7 @@ import { Roles } from 'src/utils/Roles/roles.decorator';
 import { FlWRedirectDto } from 'src/payment/dto/redirect.dto';
 import { Request, Response } from 'express';
 import { ApiExcludeEndpoint } from '@nestjs/swagger';
+import { Order } from './order.schema';
 // import { BuyerResponseDto } from './dto/buyer-response.dto';
 
 @ApiTags('Buyers')
@@ -102,14 +104,16 @@ try {
 }
 
 
-    @ApiOperation({ summary: 'View Order' })
+    @ApiOperation({ summary: 'View One Order' })
     @Get('order/:id')
-    async viewOrder(@Param('id') orderId: string) {
+     async viewOrder(@Param('id') orderId: string) {
         return this.buyersService.viewOrder(orderId);
     }
-}
-
-
-
-
-
+  
+    @ApiOperation({ summary: 'View All Orders'})
+    @Get('orders/:buyerId')
+    async viewAllOrders(@Param('buyerId') buyerId: string) {
+      return this.buyersService.viewAllOrders(buyerId);
+    }
+    
+  }
